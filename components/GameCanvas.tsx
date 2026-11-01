@@ -25,8 +25,8 @@ const H = 600;
 
 const SHAFT_L = 220;
 const SHAFT_R = 580;
-const LIFT_W = 150;
-const LIFT_H = 160;
+const LIFT_W = 164;
+const LIFT_H = 172;
 const LIFT_X = (W - LIFT_W) / 2;
 /** Screen Y of the cabin's bottom edge; the camera follows the lift. */
 const BASE_Y = 430;
@@ -60,9 +60,10 @@ const QTE_DROP = 150;
 const QTE_KEYS: QteKey[] = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
 const INTRO_DURATION = 3.8;
 
-/** Source regions inside Gothic Horror Elevator Sprite Sheet.png (1536x1024). */
-const ELEV_OPEN = { sx: 642, sy: 90, sw: 263, sh: 363 };
-const ELEV_CLOSED = { sx: 345, sy: 32, sw: 280, sh: 422 };
+/** Source regions inside Vintage Steampunk Elevator Asset Collection-no-bg.png & Gothic Horror Elevator Sprite Sheet.png. */
+const STEAM_OPEN = { sx: 425, sy: 12, sw: 381, sh: 407 };
+const STEAM_GATE = { sx: 429, sy: 590, sw: 319, sh: 365 };
+const STEAM_BANNER = { sx: 1320, sy: 638, sw: 141, sh: 221 };
 const ELEV_CABLE = { sx: 970, sy: 30, sw: 39, sh: 450 };
 const ELEV_LAMP = { sx: 975, sy: 680, sw: 135, sh: 205 };
 const ELEV_DANGER = { sx: 812, sy: 690, sw: 118, sh: 285 };
@@ -153,7 +154,7 @@ function difficulty(floor: number): Difficulty | null {
   return { ghostSpeed: 700, ghostEvery: [1.3, 2.2], lanes: [0, 1, 2], dualGhosts: true, crawlerWave: 3, crawlerEvery: [4, 6], crawlerClimb: 430 };
 }
 
-type Sprites = Record<'elevator' | 'ghost' | 'cuteGhost' | 'zombie' | 'skeleton' | 'shaft', HTMLImageElement>;
+type Sprites = Record<'elevator' | 'steampunk' | 'ghost' | 'cuteGhost' | 'zombie' | 'skeleton' | 'shaft', HTMLImageElement>;
 
 interface Props {
   mode: GameMode;
@@ -212,6 +213,7 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
 
     const sprites: Sprites = {
       elevator: loadSprite('/assets/elevator.png'),
+      steampunk: loadSprite('/assets/steampunk_elevator.png'),
       ghost: loadSprite('/assets/ghost.png'),
       cuteGhost: loadSprite('/assets/cute_ghost.png'),
       zombie: loadSprite('/assets/zombie.png'),
@@ -624,6 +626,19 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
             48,
             72,
           );
+          if (side === 0 && floorIndex % 2 === 0 && ready(sprites.steampunk)) {
+            ctx!.drawImage(
+              sprites.steampunk,
+              STEAM_BANNER.sx,
+              STEAM_BANNER.sy,
+              STEAM_BANNER.sw,
+              STEAM_BANNER.sh,
+              SHAFT_L - 44,
+              slabY - 122,
+              32,
+              54,
+            );
+          }
           if (side === 1 && floorIndex % 2 === 1) {
             ctx!.drawImage(
               sprites.elevator,
@@ -799,49 +814,53 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
     function drawElevatorAndPlayers(liftX: number, liftTop: number) {
       const walkProgress = Math.max(0, Math.min(1, (time - 0.65) / 2.2));
       const walking = time >= 0.65 && time < 2.85;
-      const maleX = 153 + (liftX + 52 - 153) * walkProgress;
-      const femaleX = 647 + (liftX + LIFT_W - 52 - 647) * walkProgress;
+      const maleX = 153 + (liftX + 58 - 153) * walkProgress;
+      const femaleX = 647 + (liftX + LIFT_W - 58 - 647) * walkProgress;
       const insideLift = walkProgress >= 0.85;
-      const gateClosed = time >= 3.1;
+      const gateProgress = Math.max(0, Math.min(1, (time - 2.95) / 0.3));
 
-      if (!ready(sprites.elevator)) {
+      if (!ready(sprites.steampunk)) {
         drawLiftFallback(liftX, liftTop);
         drawCharacter(maleX, BASE_Y - 8, false, walking);
         drawCharacter(femaleX, BASE_Y - 8, true, walking);
         return;
       }
 
-      // 1. Open elevator interior
+      // 1. Open Vintage Steampunk elevator cabin (chandelier, ruby crest, sconces, red carpet)
       ctx!.drawImage(
-        sprites.elevator,
-        ELEV_OPEN.sx,
-        ELEV_OPEN.sy,
-        ELEV_OPEN.sw,
-        ELEV_OPEN.sh,
+        sprites.steampunk,
+        STEAM_OPEN.sx,
+        STEAM_OPEN.sy,
+        STEAM_OPEN.sw,
+        STEAM_OPEN.sh,
         liftX,
         liftTop,
         LIFT_W,
         LIFT_H,
       );
 
-      // 2. Players inside the cabin (drawn behind the closed gate)
+      // 2. Players inside the cabin (drawn behind the accordion brass gate)
       if (insideLift) {
-        drawCharacter(maleX, BASE_Y - 12, false, walking);
-        drawCharacter(femaleX, BASE_Y - 12, true, walking);
+        drawCharacter(maleX, BASE_Y - 14, false, walking);
+        drawCharacter(femaleX, BASE_Y - 14, true, walking);
       }
 
-      // 3. Closed gothic cage once they step inside
-      if (gateClosed) {
+      // 3. Sliding brass accordion gate once players step inside
+      if (gateProgress > 0) {
+        const doorwayX = liftX + 28;
+        const doorwayY = liftTop + 26;
+        const doorwayW = (LIFT_W - 56) * gateProgress;
+        const doorwayH = LIFT_H - 34;
         ctx!.drawImage(
-          sprites.elevator,
-          ELEV_CLOSED.sx,
-          ELEV_CLOSED.sy,
-          ELEV_CLOSED.sw,
-          ELEV_CLOSED.sh,
-          liftX - 4,
-          liftTop - 16,
-          LIFT_W + 8,
-          LIFT_H + 16,
+          sprites.steampunk,
+          STEAM_GATE.sx,
+          STEAM_GATE.sy,
+          STEAM_GATE.sw,
+          STEAM_GATE.sh,
+          doorwayX,
+          doorwayY,
+          doorwayW,
+          doorwayH,
         );
       }
 
