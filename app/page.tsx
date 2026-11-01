@@ -186,7 +186,7 @@ export default function Home() {
           {/* Pixel Art Horror Title */}
           <div>
             <h1 className="font-mono text-2xl leading-snug tracking-wider text-red-500 drop-shadow-[4px_4px_0_#2a0404] sm:text-4xl">
-              THE HAUNTED HOTEL
+              GOING UP?
             </h1>
             <p className="mt-2 text-xl tracking-wide text-amber-100/85 sm:text-2xl">
               Naikkan lift tua bersama sampai lantai {TOTAL_FLOORS} (Room 1008). Wajib dimainkan berdua!

@@ -1124,7 +1124,7 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
       width={W}
       height={H}
       className="block h-auto w-full max-w-[800px] rounded-md border border-red-950 bg-black [image-rendering:pixelated]"
-      aria-label="The Haunted Hotel game canvas"
+      aria-label="Going Up? game canvas"
     />
   );
 }

@@ -15,7 +15,7 @@ const pixelBody = VT323({
 });
 
 export const metadata: Metadata = {
-  title: "The Haunted Hotel: Room 1008",
+  title: "Going Up? - Room 1008",
   description: "2-Player Cooperative Pixel Horror Elevator Survival Game",
 };
 
