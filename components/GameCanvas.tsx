@@ -77,10 +77,13 @@ const INTRO_DURATION = 3.8;
 /** Source regions inside Vintage Steampunk Elevator Asset Collection-no-bg.png & Gothic Horror Elevator Sprite Sheet.png. */
 const STEAM_OPEN = { sx: 425, sy: 12, sw: 381, sh: 407 };
 const STEAM_GATE = { sx: 429, sy: 590, sw: 319, sh: 365 };
-const STEAM_BANNER = { sx: 1320, sy: 638, sw: 141, sh: 221 };
 const ELEV_CABLE = { sx: 970, sy: 30, sw: 39, sh: 450 };
-const ELEV_LAMP = { sx: 975, sy: 680, sw: 135, sh: 205 };
-const ELEV_DANGER = { sx: 812, sy: 690, sw: 118, sh: 285 };
+/** 3 Gothic corridor bays inside Gothic Pixel-Art Hotel Corridor Doors 101-103-no-bg.png (1536x1024). */
+const CORRIDOR_BAYS = [
+  { sx: 16, sy: 216, sw: 516, sh: 575, doorSx: 202, doorSw: 128 },
+  { sx: 496, sy: 216, sw: 542, sh: 575, doorSx: 703, doorSw: 128 },
+  { sx: 994, sy: 216, sw: 526, sh: 575, doorSx: 1201, doorSw: 128 },
+];
 
 const BGM_SRC = '/music/musik_latar_1.wav';
 const GHOST_SFX = '/music/ghost.wav';
@@ -168,7 +171,10 @@ function difficulty(floor: number): Difficulty | null {
   return { ghostSpeed: 700, ghostEvery: [1.3, 2.2], lanes: [0, 1, 2], dualGhosts: true, crawlerWave: 1, crawlerEvery: [3, 4.5], crawlerClimb: 430 };
 }
 
-type Sprites = Record<'elevator' | 'steampunk' | 'ghost' | 'cuteGhost' | 'zombie' | 'skeleton' | 'shaft', HTMLImageElement>;
+type Sprites = Record<
+  'elevator' | 'steampunk' | 'corridor' | 'ghost' | 'cuteGhost' | 'zombie' | 'skeleton' | 'shaft',
+  HTMLImageElement
+>;
 
 interface Props {
   mode: GameMode;
@@ -228,6 +234,7 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
     const sprites: Sprites = {
       elevator: loadSprite('/assets/elevator.png'),
       steampunk: loadSprite('/assets/steampunk_elevator.png'),
+      corridor: loadSprite('/assets/corridor.png'),
       ghost: loadSprite('/assets/ghost.png'),
       cuteGhost: loadSprite('/assets/cute_ghost.png'),
       zombie: loadSprite('/assets/zombie.png'),
@@ -594,105 +601,88 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
 
     function drawCorridor(floorIndex: number) {
       const slabY = toScreen(floorIndex * FLOOR_HEIGHT);
-      if (slabY < -200 || slabY > H + 40) return;
-      const roomH = 150;
+      if (slabY < -220 || slabY > H + 50) return;
+      const roomH = 200;
+      const topY = slabY - 184;
       const isTop = floorIndex >= MAX_HEIGHT / FLOOR_HEIGHT;
 
       for (const side of [0, 1]) {
         const x0 = side === 0 ? 0 : SHAFT_R;
         const x1 = side === 0 ? SHAFT_L : W;
-        const grad = ctx!.createLinearGradient(0, slabY - roomH, 0, slabY);
-        grad.addColorStop(0, isTop ? '#1b2238' : '#2a1610');
-        grad.addColorStop(1, isTop ? '#2c3658' : '#4a2a18');
-        ctx!.fillStyle = grad;
-        ctx!.fillRect(x0, slabY - roomH, x1 - x0, roomH);
-        ctx!.fillStyle = '#5a0f14';
-        ctx!.fillRect(x0, slabY - 14, x1 - x0, 14);
-        // Door
-        const doorW = 54;
-        const doorX = side === 0 ? x1 - doorW - 40 : x0 + 40;
+        const w = x1 - x0;
         const openAmt =
           floorIndex === 0 && time > 0.15 && time < 3.4
             ? Math.min(1, (time - 0.15) / 0.5)
             : 0;
-        ctx!.fillStyle = '#3b2314';
-        ctx!.fillRect(doorX - 4, slabY - 110, doorW + 8, 96);
-        // Dark room interior behind the door when open
-        ctx!.fillStyle = '#0c0604';
-        ctx!.fillRect(doorX, slabY - 106, doorW, 92);
-        const leafW = doorW * (1 - openAmt * 0.72);
-        ctx!.fillStyle = '#5c3a22';
-        ctx!.fillRect(doorX, slabY - 106, leafW, 92);
-        if (leafW > 18) {
-          ctx!.fillStyle = '#7a5232';
-          ctx!.fillRect(doorX + 5, slabY - 98, leafW - 10, 34);
-          ctx!.fillRect(doorX + 5, slabY - 58, leafW - 10, 38);
-          ctx!.fillStyle = '#d9b44a';
-          ctx!.beginPath();
-          ctx!.arc(side === 0 ? doorX + leafW - 7 : doorX + 7, slabY - 58, 3, 0, Math.PI * 2);
-          ctx!.fill();
-        }
-        ctx!.fillStyle = '#d9b44a';
-        ctx!.font = 'bold 11px monospace';
-        ctx!.textAlign = 'center';
-        ctx!.fillText(isTop ? '1008' : `${floorIndex + 1}0${side + 1}`, doorX + doorW / 2, slabY - 114);
-        // Flickering wall lamp + asset fixture
-        const flicker = Math.sin(time * 13 + floorIndex) > -0.7 ? 1 : 0.3;
-        const lampX = side === 0 ? 45 : W - 45;
-        if (ready(sprites.elevator)) {
-          ctx!.drawImage(
-            sprites.elevator,
-            ELEV_LAMP.sx,
-            ELEV_LAMP.sy,
-            ELEV_LAMP.sw,
-            ELEV_LAMP.sh,
-            lampX - 24,
-            slabY - 148,
-            48,
-            72,
-          );
-          if (side === 0 && floorIndex % 2 === 0 && ready(sprites.steampunk)) {
-            ctx!.drawImage(
-              sprites.steampunk,
-              STEAM_BANNER.sx,
-              STEAM_BANNER.sy,
-              STEAM_BANNER.sw,
-              STEAM_BANNER.sh,
-              SHAFT_L - 44,
-              slabY - 122,
-              32,
-              54,
-            );
+
+        if (ready(sprites.corridor)) {
+          const bayIndex = floorIndex === 0 ? side : (floorIndex + side) % CORRIDOR_BAYS.length;
+          const bay = CORRIDOR_BAYS[bayIndex];
+          ctx!.drawImage(sprites.corridor, bay.sx, bay.sy, bay.sw, bay.sh, x0, topY, w, roomH);
+
+          // Opening cutscene on Floor 1: swing the gothic door leaf open
+          if (openAmt > 0) {
+            const doorX = x0 + w * 0.376;
+            const doorY = topY + roomH * 0.272;
+            const doorW = w * 0.248;
+            const doorH = roomH * 0.535;
+            ctx!.fillStyle = '#070303';
+            ctx!.fillRect(doorX, doorY, doorW, doorH);
+            const leafW = doorW * (1 - openAmt * 0.78);
+            if (leafW > 4) {
+              ctx!.drawImage(
+                sprites.corridor,
+                bay.doorSx,
+                372,
+                bay.doorSw,
+                308,
+                doorX,
+                doorY,
+                leafW,
+                doorH,
+              );
+            }
           }
-          if (side === 1 && floorIndex % 2 === 1) {
-            ctx!.drawImage(
-              sprites.elevator,
-              ELEV_DANGER.sx,
-              ELEV_DANGER.sy,
-              ELEV_DANGER.sw,
-              ELEV_DANGER.sh,
-              SHAFT_R - 46,
-              slabY - 108,
-              34,
-              82,
-            );
+
+          // Update room number plaque on Floors 2-10 (Floor 1 natively shows 101 & 102)
+          if (floorIndex > 0) {
+            const plaqueW = 38;
+            const plaqueH = 12;
+            const plaqueX = x0 + w / 2 - plaqueW / 2;
+            const plaqueY = topY + roomH * 0.184;
+            ctx!.fillStyle = '#180f09';
+            ctx!.fillRect(plaqueX, plaqueY, plaqueW, plaqueH);
+            ctx!.fillStyle = isTop ? '#7fd1ff' : '#d9b44a';
+            ctx!.font = 'bold 10px monospace';
+            ctx!.textAlign = 'center';
+            ctx!.fillText(isTop ? '1008' : `${floorIndex + 1}0${side + 1}`, x0 + w / 2, plaqueY + 10);
           }
+
+          // Subtle flickering candle glow over the corridor candelabra
+          const flicker = Math.sin(time * 13 + floorIndex + side) > -0.7 ? 1 : 0.35;
+          const candleX = x0 + w * 0.18;
+          const candleY = topY + roomH * 0.38;
+          const glow = ctx!.createRadialGradient(candleX, candleY, 2, candleX, candleY, 55);
+          glow.addColorStop(0, `rgba(255,190,90,${0.38 * flicker})`);
+          glow.addColorStop(1, 'rgba(255,190,90,0)');
+          ctx!.fillStyle = glow;
+          ctx!.fillRect(candleX - 55, candleY - 55, 110, 110);
+          continue;
         }
-        const glow = ctx!.createRadialGradient(lampX, slabY - 118, 2, lampX, slabY - 118, 65);
-        glow.addColorStop(0, `rgba(255,190,90,${0.6 * flicker})`);
-        glow.addColorStop(1, 'rgba(255,190,90,0)');
-        ctx!.fillStyle = glow;
-        ctx!.fillRect(lampX - 65, slabY - 180, 130, 130);
+
+        const grad = ctx!.createLinearGradient(0, slabY - 150, 0, slabY);
+        grad.addColorStop(0, isTop ? '#1b2238' : '#2a1610');
+        grad.addColorStop(1, isTop ? '#2c3658' : '#4a2a18');
+        ctx!.fillStyle = grad;
+        ctx!.fillRect(x0, slabY - 150, w, 150);
       }
 
-      ctx!.fillStyle = '#222';
-      ctx!.fillRect(0, slabY, W, 12);
-      ctx!.fillStyle = '#3a3a3a';
-      ctx!.fillRect(0, slabY, W, 3);
+      ctx!.fillStyle = '#1c1410';
+      ctx!.fillRect(SHAFT_L, slabY, SHAFT_R - SHAFT_L, 12);
       ctx!.fillStyle = isTop ? '#7fd1ff' : '#e8c26a';
       ctx!.font = 'bold 14px monospace';
       ctx!.textAlign = 'left';
-      ctx!.fillText(isTop ? 'ROOM 1008' : `FLOOR ${floorIndex + 1}`, SHAFT_L + 8, slabY - 6);
+      ctx!.fillText(isTop ? 'ROOM 1008' : `FLOOR ${floorIndex + 1}`, SHAFT_L + 12, slabY - 6);
     }
 
     function drawLiftFallback(x: number, y: number) {
@@ -839,8 +829,8 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
     function drawElevatorAndPlayers(liftX: number, liftTop: number) {
       const walkProgress = Math.max(0, Math.min(1, (time - 0.65) / 2.2));
       const walking = time >= 0.65 && time < 2.85;
-      const maleX = 153 + (liftX + 58 - 153) * walkProgress;
-      const femaleX = 647 + (liftX + LIFT_W - 58 - 647) * walkProgress;
+      const maleX = 110 + (liftX + 58 - 110) * walkProgress;
+      const femaleX = 690 + (liftX + LIFT_W - 58 - 690) * walkProgress;
       const insideLift = walkProgress >= 0.85;
       const gateProgress = Math.max(0, Math.min(1, (time - 2.95) / 0.3));
 

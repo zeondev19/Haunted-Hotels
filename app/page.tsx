@@ -177,18 +177,18 @@ export default function Home() {
           {/* Brass Floor Indicator Plaque */}
           <div className="inline-flex items-center gap-3 border-2 border-amber-600/80 bg-[#1a0d0a] px-4 py-1.5 shadow-[4px_4px_0_#000]">
             <span className="h-2.5 w-2.5 bg-red-500 animate-[flickerLamp_3s_infinite]" />
-            <span className="font-mono text-[10px] tracking-widest text-amber-300 sm:text-xs">
+            <span className="font-creep text-base tracking-widest text-amber-300 sm:text-lg">
               FLOOR 01 &gt;&gt; ROOM 1008
             </span>
             <span className="h-2.5 w-2.5 bg-red-500 animate-[flickerLamp_3s_infinite]" />
           </div>
 
-          {/* Pixel Art Horror Title */}
+          {/* Dripping Horror Title */}
           <div>
-            <h1 className="font-mono text-2xl leading-snug tracking-wider text-red-500 drop-shadow-[4px_4px_0_#2a0404] sm:text-4xl">
+            <h1 className="font-horror text-4xl leading-tight tracking-wider text-red-600 drop-shadow-[0_4px_0_#2a0404] [text-shadow:0_0_22px_rgba(220,38,38,0.65)] sm:text-6xl">
               GOING UP?
             </h1>
-            <p className="mt-2 text-xl tracking-wide text-amber-100/85 sm:text-2xl">
+            <p className="font-creep mt-2 text-xl tracking-wider text-amber-200/90 sm:text-2xl">
               Naikkan lift tua bersama sampai lantai {TOTAL_FLOORS} (Room 1008). Wajib dimainkan berdua!
             </p>
           </div>
@@ -203,7 +203,7 @@ export default function Home() {
 
             {/* Role Selector */}
             <div className="mb-5 border-2 border-[#381414] bg-[#090404] p-4">
-              <p className="mb-3 font-mono text-[10px] uppercase tracking-wider text-amber-400 sm:text-xs">
+              <p className="font-creep mb-3 text-lg uppercase tracking-widest text-amber-400 sm:text-xl">
                 Pilih Pembagian Tugas (1 Tombol / Pemain)
               </p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -217,14 +217,14 @@ export default function Home() {
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-[11px] text-sky-400">P1: NAIK</span>
-                    <kbd className="border border-sky-500/60 bg-sky-950/70 px-2 py-0.5 font-mono text-[10px] text-sky-200">
+                    <span className="font-creep text-lg text-sky-400">P1: NAIK</span>
+                    <kbd className="font-pixel border border-sky-500/60 bg-sky-950/70 px-2.5 py-0.5 text-base text-sky-200">
                       W
                     </kbd>
                   </div>
                   <div className="mt-2 flex items-center justify-between">
-                    <span className="font-mono text-[11px] text-amber-300">P2: TURUN</span>
-                    <kbd className="border border-amber-500/60 bg-amber-950/70 px-2 py-0.5 font-mono text-[10px] text-amber-200">
+                    <span className="font-creep text-lg text-amber-300">P2: TURUN</span>
+                    <kbd className="font-pixel border border-amber-500/60 bg-amber-950/70 px-2.5 py-0.5 text-base text-amber-200">
                       ↓
                     </kbd>
                   </div>
@@ -240,14 +240,14 @@ export default function Home() {
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-[11px] text-sky-400">P1: TURUN</span>
-                    <kbd className="border border-sky-500/60 bg-sky-950/70 px-2 py-0.5 font-mono text-[10px] text-sky-200">
+                    <span className="font-creep text-lg text-sky-400">P1: TURUN</span>
+                    <kbd className="font-pixel border border-sky-500/60 bg-sky-950/70 px-2.5 py-0.5 text-base text-sky-200">
                       S
                     </kbd>
                   </div>
                   <div className="mt-2 flex items-center justify-between">
-                    <span className="font-mono text-[11px] text-amber-300">P2: NAIK</span>
-                    <kbd className="border border-amber-500/60 bg-amber-950/70 px-2 py-0.5 font-mono text-[10px] text-amber-200">
+                    <span className="font-creep text-lg text-amber-300">P2: NAIK</span>
+                    <kbd className="font-pixel border border-amber-500/60 bg-amber-950/70 px-2.5 py-0.5 text-base text-amber-200">
                       ↑
                     </kbd>
                   </div>
@@ -259,20 +259,20 @@ export default function Home() {
             <button
               onClick={startLocal}
               autoFocus
-              className="w-full cursor-pointer border-2 border-red-400 bg-red-800 px-6 py-3.5 font-mono text-xs uppercase tracking-wider text-amber-100 shadow-[0_5px_0_#3b0707,6px_6px_0_#000] transition hover:bg-red-700 active:translate-y-1 active:shadow-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-400 sm:text-sm"
+              className="font-creep w-full cursor-pointer border-2 border-red-400 bg-red-800 px-6 py-3 text-2xl uppercase tracking-widest text-amber-100 shadow-[0_5px_0_#3b0707,6px_6px_0_#000] transition hover:bg-red-700 active:translate-y-1 active:shadow-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-400 sm:text-3xl"
             >
               Play Local Co-op (1 Layar)
             </button>
 
             {/* Online Co-op Sub-panel */}
             <div className="mt-5 border-2 border-amber-900/70 bg-[#090404] p-4">
-              <p className="mb-3 font-mono text-[10px] uppercase tracking-wider text-amber-400 sm:text-xs">
+              <p className="font-creep mb-3 text-lg uppercase tracking-widest text-amber-400 sm:text-xl">
                 Online Co-op (Main Bareng Beda Perangkat)
               </p>
               <div className="flex flex-col gap-3">
                 <button
                   onClick={() => connectRoom(randomCode(), 'HOST')}
-                  className="cursor-pointer border-2 border-amber-500 bg-amber-950/50 py-2.5 font-mono text-[11px] uppercase tracking-wider text-amber-200 shadow-[0_4px_0_#451a03] transition hover:bg-amber-900/60 active:translate-y-0.5 sm:text-xs"
+                  className="font-creep cursor-pointer border-2 border-amber-500 bg-amber-950/50 py-2 text-xl uppercase tracking-widest text-amber-200 shadow-[0_4px_0_#451a03] transition hover:bg-amber-900/60 active:translate-y-0.5"
                 >
                   Create Lobby (Host P1)
                 </button>
@@ -282,12 +282,12 @@ export default function Home() {
                     onChange={(e) => setJoinInput(e.target.value.toUpperCase().slice(0, 4))}
                     placeholder="KODE ROOM (4 HURUF)"
                     aria-label="Room Code"
-                    className="flex-1 border-2 border-neutral-700 bg-black px-3 py-2 text-center font-mono text-xs uppercase tracking-widest text-amber-200 placeholder:text-neutral-600 focus:border-amber-500 focus:outline-none"
+                    className="font-pixel flex-1 border-2 border-neutral-700 bg-black px-3 py-2 text-center text-xl uppercase tracking-widest text-amber-200 placeholder:text-neutral-600 focus:border-amber-500 focus:outline-none"
                   />
                   <button
                     onClick={() => joinInput.length === 4 && connectRoom(joinInput, 'CLIENT')}
                     disabled={joinInput.length !== 4}
-                    className="cursor-pointer border-2 border-sky-500 bg-sky-950/60 px-4 py-2 font-mono text-xs uppercase text-sky-200 shadow-[0_4px_0_#0c4a6e] transition hover:bg-sky-900/70 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="font-creep cursor-pointer border-2 border-sky-500 bg-sky-950/60 px-5 py-2 text-xl uppercase text-sky-200 shadow-[0_4px_0_#0c4a6e] transition hover:bg-sky-900/70 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Join (P2)
                   </button>
@@ -300,12 +300,12 @@ export default function Home() {
           {/* Pixel Control Manual Footer */}
           <div className="grid w-full grid-cols-2 gap-4 border-2 border-[#381414] bg-[#0d0607]/90 p-3 text-left shadow-[6px_6px_0_#000]">
             <div className="border-r border-[#381414] pr-3">
-              <p className="font-mono text-[11px] text-sky-400">PLAYER 1</p>
+              <p className="font-creep text-lg text-sky-400">PLAYER 1</p>
               <p className="mt-1 text-lg text-neutral-300">Gerak: <span className="text-white">{p1Btn}</span></p>
               <p className="text-lg text-neutral-400">QTE Kabel: <span className="text-amber-200">W A S D</span></p>
             </div>
             <div className="pl-1">
-              <p className="font-mono text-[11px] text-amber-300">PLAYER 2</p>
+              <p className="font-creep text-lg text-amber-300">PLAYER 2</p>
               <p className="mt-1 text-lg text-neutral-300">Gerak: <span className="text-white">{p2Btn}</span></p>
               <p className="text-lg text-neutral-400">QTE Kabel: <span className="text-amber-200">↑ ← ↓ →</span></p>
             </div>

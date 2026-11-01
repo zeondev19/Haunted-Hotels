@@ -9,7 +9,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-vt);
-  --font-mono: var(--font-pixel);
+  --font-mono: var(--font-creep);
 }
 
 body {
@@ -17,6 +17,19 @@ body {
   color: var(--foreground);
   font-family: var(--font-vt), monospace;
   image-rendering: pixelated;
+}
+
+.font-horror {
+  font-family: var(--font-horror), cursive;
+}
+
+.font-creep {
+  font-family: var(--font-creep), cursive;
+  letter-spacing: 0.08em;
+}
+
+.font-pixel {
+  font-family: var(--font-vt), monospace;
 }
 
 @keyframes floatSlow {
