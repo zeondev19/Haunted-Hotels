@@ -160,10 +160,10 @@ interface Difficulty {
 function difficulty(floor: number): Difficulty | null {
   if (floor >= 10) return null;
   if (floor <= 3)
-    return { ghostSpeed: 420, ghostEvery: [2.2, 3.4], lanes: [0, 1], dualGhosts: false, crawlerWave: 2, crawlerEvery: [6, 9], crawlerClimb: 340 };
+    return { ghostSpeed: 420, ghostEvery: [2.2, 3.4], lanes: [0, 1], dualGhosts: false, crawlerWave: 1, crawlerEvery: [5, 7], crawlerClimb: 340 };
   if (floor <= 6)
-    return { ghostSpeed: 560, ghostEvery: [1.7, 2.8], lanes: [0, 1, 2], dualGhosts: true, crawlerWave: 2, crawlerEvery: [5, 7.5], crawlerClimb: 380 };
-  return { ghostSpeed: 700, ghostEvery: [1.3, 2.2], lanes: [0, 1, 2], dualGhosts: true, crawlerWave: 3, crawlerEvery: [4, 6], crawlerClimb: 430 };
+    return { ghostSpeed: 560, ghostEvery: [1.7, 2.8], lanes: [0, 1, 2], dualGhosts: true, crawlerWave: 1, crawlerEvery: [4, 6], crawlerClimb: 380 };
+  return { ghostSpeed: 700, ghostEvery: [1.3, 2.2], lanes: [0, 1, 2], dualGhosts: true, crawlerWave: 1, crawlerEvery: [3, 4.5], crawlerClimb: 430 };
 }
 
 type Sprites = Record<'elevator' | 'steampunk' | 'ghost' | 'cuteGhost' | 'zombie' | 'skeleton' | 'shaft', HTMLImageElement>;
