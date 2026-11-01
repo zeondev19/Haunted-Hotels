@@ -1,29 +1,31 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Press_Start_2P, VT323 } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const pixelHeading = Press_Start_2P({
+  weight: "400",
+  variable: "--font-pixel",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const pixelBody = VT323({
+  weight: "400",
+  variable: "--font-vt",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "The Haunted Hotel",
-  description: "Co-op elevator horror game",
+  title: "The Haunted Hotel: Room 1008",
+  description: "2-Player Cooperative Pixel Horror Elevator Survival Game",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      lang="id"
+      className={`${pixelHeading.variable} ${pixelBody.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#070304] text-neutral-100">{children}</body>
     </html>
   );
 }
