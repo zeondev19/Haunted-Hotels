@@ -32,14 +32,26 @@ const LIFT_X = (W - LIFT_W) / 2;
 const BASE_Y = 430;
 
 const BASE_SPEED = 210;
-const GHOST_W = 56;
-const GHOST_H = 48;
-const GHOST_DRAW_W = 76;
-const GHOST_DRAW_H = 100;
+const GHOST_W = 48;
+const GHOST_H = 40;
+const GHOST_DRAW_W = 66;
+const GHOST_DRAW_H = 56;
 const GHOST_SHEET_COLS = 6;
-const GHOST_SHEET_ROWS = 2;
 const GHOST_WARNING = 1.0;
 const GHOST_DAMAGE = 20;
+/** Tight cabin hitbox inset so transparent top ruby crest & outer trim do not trigger false hits. */
+const LIFT_HIT_PAD_X = 14;
+const LIFT_HIT_BOTTOM = 8;
+const LIFT_HIT_TOP = LIFT_H - 14;
+/** Opaque vertical slice per row so every flying sprite is centered on (g.x, g.y). */
+const VAMPIRE_ROWS = [
+  { sy: 120, sh: 284 }, // Row 0 (faces left)
+  { sy: 618, sh: 234 }, // Row 1 (faces right, 510 + 108)
+];
+const CUTE_GHOST_ROWS = [
+  { sy: 160, sh: 230 }, // Row 0 (faces right)
+  { sy: 612, sh: 226 }, // Row 1 (faces left, 512 + 100)
+];
 /** Ghost center relative to the lift bottom: above the cabin, cabin level, below the cabin. */
 const LANE_OFFSETS = [LIFT_H + 55, LIFT_H / 2, -45];
 
@@ -470,8 +482,12 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
           return true;
         }
         g.x += (g.direction === 'RIGHT' ? 1 : -1) * g.speed * dt;
-        const hitX = g.x + GHOST_W / 2 > LIFT_X && g.x - GHOST_W / 2 < LIFT_X + LIFT_W;
-        const hitY = g.y + GHOST_H / 2 > s.y && g.y - GHOST_H / 2 < s.y + LIFT_H;
+        const hitX =
+          g.x + GHOST_W / 2 > LIFT_X + LIFT_HIT_PAD_X &&
+          g.x - GHOST_W / 2 < LIFT_X + LIFT_W - LIFT_HIT_PAD_X;
+        const hitY =
+          g.y + GHOST_H / 2 > s.y + LIFT_HIT_BOTTOM &&
+          g.y - GHOST_H / 2 < s.y + LIFT_HIT_TOP;
         if (hitX && hitY) {
           s.hp = Math.max(0, s.hp - GHOST_DAMAGE);
           playClip(ELEVATOR_HIT_SFX, 0.85);
@@ -874,20 +890,21 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
     function drawGhost(g: HorizontalGhost) {
       const sx = g.x;
       const sy = toScreen(g.y);
-      const img = g.kind === 'ghost' ? sprites.cuteGhost : sprites.ghost;
+      const isCute = g.kind === 'ghost';
+      const img = isCute ? sprites.cuteGhost : sprites.ghost;
       if (ready(img)) {
         const fw = img.naturalWidth / GHOST_SHEET_COLS;
-        const fh = img.naturalHeight / GHOST_SHEET_ROWS;
         const col = Math.floor(time * 10 + g.id) % GHOST_SHEET_COLS;
         // cute_ghost.png: row 0 faces right, row 1 faces left. Vampire.png: row 0 faces left, row 1 faces right.
-        const row = g.kind === 'ghost' ? (g.direction === 'RIGHT' ? 0 : 1) : g.direction === 'RIGHT' ? 1 : 0;
+        const row = isCute ? (g.direction === 'RIGHT' ? 0 : 1) : g.direction === 'RIGHT' ? 1 : 0;
+        const slice = isCute ? CUTE_GHOST_ROWS[row] : VAMPIRE_ROWS[row];
         const bob = Math.sin(time * 10 + g.id) * 3;
         ctx!.drawImage(
           img,
           col * fw,
-          row * fh,
+          slice.sy,
           fw,
-          fh,
+          slice.sh,
           sx - GHOST_DRAW_W / 2,
           sy - GHOST_DRAW_H / 2 + bob,
           GHOST_DRAW_W,
