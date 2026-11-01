@@ -151,7 +151,7 @@ export default function Home() {
 
   if (screen === 'MENU') {
     return (
-      <main className="relative flex h-dvh w-full items-center justify-between overflow-hidden bg-[#0f0507] px-6 text-neutral-100 sm:px-12 lg:px-16">
+      <main className="relative flex h-dvh w-full items-center justify-between overflow-hidden bg-[#0a0507] bg-[url('/assets/menu_bg.png')] bg-cover bg-center px-6 text-neutral-100 sm:px-12 lg:px-16">
         {/* Left Side: Checkered Pixel Cables + Open Vintage Steampunk Elevator anchored flush at bottom-left */}
         <div className="relative hidden h-full w-[46%] max-w-[540px] select-none md:block">
           <div
@@ -168,63 +168,65 @@ export default function Home() {
           />
         </div>
 
-        {/* Right Side: Exact GOING UP? Logo + Centered Menu Stack */}
+        {/* Right Side: Exact GOING UP? Logo + Menu Cards matching the reference design */}
         <div className="relative z-10 mx-auto flex w-full max-w-[440px] flex-col items-center text-center md:mx-auto">
-          {/* Exact GOING UP? pixel logo */}
           <h1 className="sr-only">GOING UP?</h1>
           <div
             aria-hidden="true"
             className="h-20 w-72 bg-[url('/assets/going_up_logo.png')] bg-contain bg-center bg-no-repeat sm:h-24 sm:w-88 [image-rendering:pixelated]"
           />
-          <p className="mt-3 font-sans text-lg tracking-tight text-white sm:text-xl">
+          <p className="mt-2 font-sans text-lg tracking-tight text-white sm:text-xl">
             reach your room floor or die.
           </p>
 
-          {/* Menu Buttons Stack matching the reference mockup */}
-          <div className="mt-10 flex w-full max-w-[360px] flex-col items-center gap-4">
+          <div className="mt-7 flex w-full max-w-[390px] flex-col items-center gap-3.5">
+            {/* Play Locally button */}
             <button
               type="button"
               onClick={startLocal}
               autoFocus
-              className="cursor-pointer py-1 font-sans text-xl text-white transition hover:text-amber-300 focus-visible:text-amber-300 focus-visible:outline-none"
+              className="w-full cursor-pointer rounded-lg bg-[#521520] py-2.5 font-serif text-lg font-bold tracking-wide text-white shadow-[0_3px_0_#2b090f] transition hover:bg-[#681b29]"
             >
-              Play Local
+              Play Locally
             </button>
 
-            <p className="mt-1 font-sans text-xl text-white">Play Online CO-OP</p>
+            {/* Play Online CO-OP dark rounded container */}
+            <div className="w-full rounded-xl bg-[#1e1d1d]/95 p-3.5 shadow-xl">
+              <p className="mb-2.5 font-sans text-lg text-white">Play Online CO-OP</p>
 
-            <button
-              type="button"
-              onClick={() => connectRoom(randomCode(), 'HOST')}
-              className="w-full cursor-pointer rounded-lg bg-[#521520] py-2.5 font-sans text-lg text-white transition hover:bg-[#681b29]"
-            >
-              Create Lobby (p1)
-            </button>
-
-            <div className="flex w-full items-stretch gap-2.5">
-              <input
-                value={joinInput}
-                onChange={(e) => setJoinInput(e.target.value.toUpperCase().slice(0, 4))}
-                placeholder="Join Code (P2)"
-                aria-label="Join Code (P2)"
-                className="flex-1 rounded-lg bg-[#3c3c3c] px-4 py-3 text-center font-sans text-lg text-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-amber-400/60"
-              />
               <button
                 type="button"
-                onClick={() => joinInput.length === 4 && connectRoom(joinInput, 'CLIENT')}
-                disabled={joinInput.length !== 4}
-                className="cursor-pointer rounded-lg bg-[#521520] px-5 py-3 font-sans text-lg text-white transition hover:bg-[#681b29] disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={() => connectRoom(randomCode(), 'HOST')}
+                className="w-full cursor-pointer rounded-lg bg-[#521520] py-2.5 font-serif text-lg font-bold tracking-wide text-white shadow-[0_3px_0_#2b090f] transition hover:bg-[#681b29]"
               >
-                Join
+                Create Lobby (p1)
               </button>
+
+              <div className="mt-3 flex w-full items-stretch gap-2.5">
+                <input
+                  value={joinInput}
+                  onChange={(e) => setJoinInput(e.target.value.toUpperCase().slice(0, 4))}
+                  placeholder="Join Code (P2)"
+                  aria-label="Join Code (P2)"
+                  className="flex-1 rounded-lg bg-[#3c3c3c] px-4 py-2.5 text-center font-serif text-base italic text-white placeholder:italic placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-amber-400/60"
+                />
+                <button
+                  type="button"
+                  onClick={() => joinInput.length === 4 && connectRoom(joinInput, 'CLIENT')}
+                  disabled={joinInput.length !== 4}
+                  className="cursor-pointer rounded-lg bg-[#521520] px-5 py-2.5 font-serif text-lg font-bold text-white shadow-[0_3px_0_#2b090f] transition hover:bg-[#681b29] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Join
+                </button>
+              </div>
+              {lobbyError && <p className="mt-2 text-sm text-red-400">{lobbyError}</p>}
             </div>
 
-            {lobbyError && <p className="text-sm text-red-400">{lobbyError}</p>}
-
+            {/* Controls button */}
             <button
               type="button"
               onClick={() => setShowControls(true)}
-              className="mt-1 w-full cursor-pointer bg-[#efc084] py-2.5 font-sans text-lg font-medium text-white transition hover:bg-[#f4cb95]"
+              className="w-full cursor-pointer rounded-lg bg-[#cc8b4b] py-2.5 font-serif text-lg font-bold tracking-wide text-[#140a04] shadow-[0_3px_0_#734920] transition hover:bg-[#db9856]"
             >
               Controls
             </button>
