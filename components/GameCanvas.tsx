@@ -53,7 +53,9 @@ const CUTE_GHOST_ROWS = [
   { sy: 612, sh: 226 }, // Row 1 (faces left, 512 + 100)
 ];
 /** Ghost center relative to the lift bottom: above the cabin, cabin level, below the cabin. */
-const LANE_OFFSETS = [LIFT_H + 55, LIFT_H / 2, -45];
+const LANE_OFFSETS = [LIFT_H + 85, LIFT_H / 2, -65];
+/** Minimum center-to-center Y distance between any two ghosts so the 172px cabin can always park safely in the gap. */
+const MIN_GHOST_GAP_Y = LIFT_H + GHOST_H + 75;
 
 const CRAWLER_W = 44;
 const CRAWLER_H = 60;
@@ -458,15 +460,22 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
       // Ghosts
       ghostTimer -= dt;
       if (diff && ghostTimer <= 0 && s.y > 120) {
-        const lanes = [...diff.lanes].sort(() => Math.random() - 0.5).slice(0, diff.dualGhosts ? 2 : 1);
         const leadY = s.speed * GHOST_WARNING * 0.85;
-        for (const lane of lanes) {
+        const primaryLane = pick(diff.lanes);
+        const y1 = s.y + leadY + LANE_OFFSETS[primaryLane];
+        const candidateYs =
+          diff.dualGhosts && Math.random() < 0.65
+            ? [y1, y1 + (primaryLane === 0 ? -MIN_GHOST_GAP_Y : MIN_GHOST_GAP_Y)]
+            : [y1];
+
+        for (const gy of candidateYs) {
+          if (gy < 120 || s.ghosts.some((existing) => Math.abs(existing.y - gy) < MIN_GHOST_GAP_Y)) continue;
           const direction = Math.random() < 0.5 ? 'RIGHT' : 'LEFT';
           s.ghosts.push({
             id: nextId++,
             x: direction === 'RIGHT' ? -GHOST_W : W + GHOST_W,
-            y: s.y + leadY + LANE_OFFSETS[lane],
-            lane,
+            y: gy,
+            lane: primaryLane,
             direction,
             warningTimer: GHOST_WARNING,
             speed: diff.ghostSpeed,
