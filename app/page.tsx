@@ -43,6 +43,7 @@ export default function Home() {
   const [joinInput, setJoinInput] = useState('');
   const [playersCount, setPlayersCount] = useState(1);
   const [lobbyError, setLobbyError] = useState('');
+  const [showControls, setShowControls] = useState(false);
   const [run, setRun] = useState(0);
   const [hud, setHud] = useState<HudInfo>(INITIAL_HUD);
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
@@ -62,6 +63,25 @@ export default function Home() {
   }, []);
 
   useEffect(() => () => leaveChannel(), [leaveChannel]);
+
+  useEffect(() => {
+    if (screen === 'GAME') return;
+    const audio = new Audio('/music/musik_menu.mp3');
+    audio.loop = true;
+    audio.volume = 0.5;
+    const tryPlay = () => {
+      audio.play().catch(() => {});
+    };
+    tryPlay();
+    window.addEventListener('pointerdown', tryPlay, { once: true });
+    window.addEventListener('keydown', tryPlay, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', tryPlay);
+      window.removeEventListener('keydown', tryPlay);
+      audio.pause();
+      audio.src = '';
+    };
+  }, [screen]);
 
   const connectRoom = (code: string, nextMode: 'HOST' | 'CLIENT') => {
     if (!supabase) {
@@ -131,186 +151,143 @@ export default function Home() {
 
   if (screen === 'MENU') {
     return (
-      <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#070304] px-4 py-8 text-center text-neutral-100">
-        {/* Tiled blood-stained brick shaft background */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[url('/assets/shaft_bg.png')] bg-repeat opacity-45 [image-rendering:pixelated]"
-        />
-        {/* Horror vignette + CRT scanlines */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(45,8,12,0.35)_0%,rgba(5,2,3,0.94)_80%)]"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.45)_50%)] bg-[length:100%_4px]"
-        />
+      <main className="relative flex h-dvh w-full items-center justify-between overflow-hidden bg-[#0f0507] px-6 text-neutral-100 sm:px-12 lg:px-16">
+        {/* Left Side: Checkered Pixel Cables + Open Vintage Steampunk Elevator anchored flush at bottom-left */}
+        <div className="relative hidden h-full w-[46%] max-w-[540px] select-none md:block">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute top-0 bottom-[64%] left-[23.5%] w-3.5 [background-image:conic-gradient(#382220_90deg,#64413d_90deg_180deg,#382220_180deg_270deg,#64413d_270deg)] [background-size:10px_10px]"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute top-0 right-[24.5%] bottom-[64%] w-3.5 [background-image:conic-gradient(#382220_90deg,#64413d_90deg_180deg,#382220_180deg_270deg,#64413d_270deg)] [background-size:10px_10px]"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute bottom-0 left-0 h-[72%] w-full bg-[url('/assets/menu_elevator.png')] bg-contain bg-bottom bg-no-repeat [image-rendering:pixelated]"
+          />
+        </div>
 
-        {/* Left & Right Elevator Guide Rails + Floating Pixel Sprites */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-6 hidden w-3 border-x-2 border-neutral-800 bg-neutral-950/90 lg:block"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 right-6 hidden w-3 border-x-2 border-neutral-800 bg-neutral-950/90 lg:block"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute left-14 top-1/4 hidden h-28 w-24 animate-[floatSlow_3.2s_ease-in-out_infinite] bg-[url('/assets/ghost.png')] bg-[length:600%_200%] bg-[position:0%_100%] drop-shadow-[0_0_12px_rgba(220,38,38,0.45)] [image-rendering:pixelated] lg:block"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute right-14 top-1/4 hidden h-28 w-24 animate-[floatSlow_2.8s_ease-in-out_infinite] bg-[url('/assets/cute_ghost.png')] bg-[length:600%_200%] bg-[position:0%_100%] drop-shadow-[0_0_12px_rgba(255,255,255,0.3)] [image-rendering:pixelated] lg:block"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute bottom-10 left-16 hidden h-28 w-20 bg-[url('/assets/zombie.png')] bg-[length:600%_200%] bg-[position:0%_0%] opacity-85 [image-rendering:pixelated] lg:block"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute bottom-10 right-16 hidden h-28 w-20 bg-[url('/assets/skeleton.png')] bg-[length:600%_200%] bg-[position:0%_0%] opacity-85 [image-rendering:pixelated] lg:block"
-        />
+        {/* Right Side: Exact GOING UP? Logo + Centered Menu Stack */}
+        <div className="relative z-10 mx-auto flex w-full max-w-[440px] flex-col items-center text-center md:mx-auto">
+          {/* Exact GOING UP? pixel logo */}
+          <h1 className="sr-only">GOING UP?</h1>
+          <div
+            aria-hidden="true"
+            className="h-20 w-72 bg-[url('/assets/going_up_logo.png')] bg-contain bg-center bg-no-repeat sm:h-24 sm:w-88 [image-rendering:pixelated]"
+          />
+          <p className="mt-3 font-sans text-lg tracking-tight text-white sm:text-xl">
+            reach your room floor or die.
+          </p>
 
-        <div className="relative z-10 flex w-full max-w-xl flex-col items-center gap-6">
-          {/* Brass Floor Indicator Plaque */}
-          <div className="inline-flex items-center gap-3 border-2 border-amber-600/80 bg-[#1a0d0a] px-4 py-1.5 shadow-[4px_4px_0_#000]">
-            <span className="h-2.5 w-2.5 bg-red-500 animate-[flickerLamp_3s_infinite]" />
-            <span className="font-creep text-base tracking-widest text-amber-300 sm:text-lg">
-              FLOOR 01 &gt;&gt; ROOM 1008
-            </span>
-            <span className="h-2.5 w-2.5 bg-red-500 animate-[flickerLamp_3s_infinite]" />
+          {/* Menu Buttons Stack matching the reference mockup */}
+          <div className="mt-10 flex w-full max-w-[360px] flex-col items-center gap-4">
+            <button
+              type="button"
+              onClick={startLocal}
+              autoFocus
+              className="cursor-pointer py-1 font-sans text-xl text-white transition hover:text-amber-300 focus-visible:text-amber-300 focus-visible:outline-none"
+            >
+              Play Local
+            </button>
+
+            <p className="mt-1 font-sans text-xl text-white">Play Online CO-OP</p>
+
+            <button
+              type="button"
+              onClick={() => connectRoom(randomCode(), 'HOST')}
+              className="w-full cursor-pointer rounded-lg bg-[#521520] py-2.5 font-sans text-lg text-white transition hover:bg-[#681b29]"
+            >
+              Create Lobby (p1)
+            </button>
+
+            <div className="flex w-full items-stretch gap-2.5">
+              <input
+                value={joinInput}
+                onChange={(e) => setJoinInput(e.target.value.toUpperCase().slice(0, 4))}
+                placeholder="Join Code (P2)"
+                aria-label="Join Code (P2)"
+                className="flex-1 rounded-lg bg-[#3c3c3c] px-4 py-3 text-center font-sans text-lg text-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-amber-400/60"
+              />
+              <button
+                type="button"
+                onClick={() => joinInput.length === 4 && connectRoom(joinInput, 'CLIENT')}
+                disabled={joinInput.length !== 4}
+                className="cursor-pointer rounded-lg bg-[#521520] px-5 py-3 font-sans text-lg text-white transition hover:bg-[#681b29] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Join
+              </button>
+            </div>
+
+            {lobbyError && <p className="text-sm text-red-400">{lobbyError}</p>}
+
+            <button
+              type="button"
+              onClick={() => setShowControls(true)}
+              className="mt-1 w-full cursor-pointer bg-[#efc084] py-2.5 font-sans text-lg font-medium text-white transition hover:bg-[#f4cb95]"
+            >
+              Controls
+            </button>
           </div>
+        </div>
 
-          {/* Dripping Horror Title */}
-          <div>
-            <h1 className="font-horror text-4xl leading-tight tracking-wider text-red-600 drop-shadow-[0_4px_0_#2a0404] [text-shadow:0_0_22px_rgba(220,38,38,0.65)] sm:text-6xl">
-              GOING UP?
-            </h1>
-            <p className="font-creep mt-2 text-xl tracking-wider text-amber-200/90 sm:text-2xl">
-              Naikkan lift tua bersama sampai lantai {TOTAL_FLOORS} (Room 1008). Wajib dimainkan berdua!
-            </p>
-          </div>
+        {/* Controls & Role Selection Modal when clicking "Controls" */}
+        {showControls && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
+            <div className="w-full max-w-md rounded-xl border border-neutral-800 bg-[#16080b] p-6 text-left shadow-2xl">
+              <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+                <h2 className="font-sans text-xl font-bold text-amber-300">Controls &amp; Role Assignment</h2>
+                <button
+                  type="button"
+                  onClick={() => setShowControls(false)}
+                  className="cursor-pointer rounded bg-neutral-800 px-3 py-1 text-sm text-neutral-300 hover:bg-neutral-700"
+                >
+                  Close
+                </button>
+              </div>
 
-          {/* Iron & Brass Elevator Control Panel */}
-          <div className="relative w-full border-4 border-[#5c1d1d] bg-[#120708]/95 p-5 shadow-[8px_8px_0_#000] sm:p-6">
-            {/* Corner Brass Rivets */}
-            <span aria-hidden="true" className="absolute left-2 top-2 h-2 w-2 bg-amber-600" />
-            <span aria-hidden="true" className="absolute right-2 top-2 h-2 w-2 bg-amber-600" />
-            <span aria-hidden="true" className="absolute bottom-2 left-2 h-2 w-2 bg-amber-600" />
-            <span aria-hidden="true" className="absolute bottom-2 right-2 h-2 w-2 bg-amber-600" />
-
-            {/* Role Selector */}
-            <div className="mb-5 border-2 border-[#381414] bg-[#090404] p-4">
-              <p className="font-creep mb-3 text-lg uppercase tracking-widest text-amber-400 sm:text-xl">
-                Pilih Pembagian Tugas (1 Tombol / Pemain)
-              </p>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <p className="mt-4 text-sm text-neutral-300"> Pilih pembagian tombol gerak lift (1 tombol per pemain):</p>
+              <div className="mt-2.5 grid grid-cols-2 gap-2.5">
                 <button
                   type="button"
                   onClick={() => toggleRole('UP')}
-                  className={`cursor-pointer border-2 p-3 text-left transition ${
+                  className={`cursor-pointer rounded-lg border p-3 text-left transition ${
                     p1Role === 'UP'
-                      ? 'border-red-500 bg-red-950/60 text-white shadow-[4px_4px_0_#450a0a]'
-                      : 'border-neutral-800 bg-[#0d0607] text-neutral-400 hover:border-neutral-600'
+                      ? 'border-red-500 bg-[#521520]/70 text-white'
+                      : 'border-neutral-800 bg-black/50 text-neutral-400 hover:border-neutral-600'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-creep text-lg text-sky-400">P1: NAIK</span>
-                    <kbd className="font-pixel border border-sky-500/60 bg-sky-950/70 px-2.5 py-0.5 text-base text-sky-200">
-                      W
-                    </kbd>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between">
-                    <span className="font-creep text-lg text-amber-300">P2: TURUN</span>
-                    <kbd className="font-pixel border border-amber-500/60 bg-amber-950/70 px-2.5 py-0.5 text-base text-amber-200">
-                      ↓
-                    </kbd>
-                  </div>
+                  <p className="font-bold text-sky-300">P1: W (Naik)</p>
+                  <p className="mt-1 font-bold text-amber-300">P2: ↓ (Turun)</p>
                 </button>
-
                 <button
                   type="button"
                   onClick={() => toggleRole('DOWN')}
-                  className={`cursor-pointer border-2 p-3 text-left transition ${
+                  className={`cursor-pointer rounded-lg border p-3 text-left transition ${
                     p1Role === 'DOWN'
-                      ? 'border-red-500 bg-red-950/60 text-white shadow-[4px_4px_0_#450a0a]'
-                      : 'border-neutral-800 bg-[#0d0607] text-neutral-400 hover:border-neutral-600'
+                      ? 'border-red-500 bg-[#521520]/70 text-white'
+                      : 'border-neutral-800 bg-black/50 text-neutral-400 hover:border-neutral-600'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-creep text-lg text-sky-400">P1: TURUN</span>
-                    <kbd className="font-pixel border border-sky-500/60 bg-sky-950/70 px-2.5 py-0.5 text-base text-sky-200">
-                      S
-                    </kbd>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between">
-                    <span className="font-creep text-lg text-amber-300">P2: NAIK</span>
-                    <kbd className="font-pixel border border-amber-500/60 bg-amber-950/70 px-2.5 py-0.5 text-base text-amber-200">
-                      ↑
-                    </kbd>
-                  </div>
+                  <p className="font-bold text-sky-300">P1: S (Turun)</p>
+                  <p className="mt-1 font-bold text-amber-300">P2: ↑ (Naik)</p>
                 </button>
               </div>
-            </div>
 
-            {/* Primary Local Co-op Button */}
-            <button
-              onClick={startLocal}
-              autoFocus
-              className="font-creep w-full cursor-pointer border-2 border-red-400 bg-red-800 px-6 py-3 text-2xl uppercase tracking-widest text-amber-100 shadow-[0_5px_0_#3b0707,6px_6px_0_#000] transition hover:bg-red-700 active:translate-y-1 active:shadow-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-400 sm:text-3xl"
-            >
-              Play Local Co-op (1 Layar)
-            </button>
-
-            {/* Online Co-op Sub-panel */}
-            <div className="mt-5 border-2 border-amber-900/70 bg-[#090404] p-4">
-              <p className="font-creep mb-3 text-lg uppercase tracking-widest text-amber-400 sm:text-xl">
-                Online Co-op (Main Bareng Beda Perangkat)
-              </p>
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={() => connectRoom(randomCode(), 'HOST')}
-                  className="font-creep cursor-pointer border-2 border-amber-500 bg-amber-950/50 py-2 text-xl uppercase tracking-widest text-amber-200 shadow-[0_4px_0_#451a03] transition hover:bg-amber-900/60 active:translate-y-0.5"
-                >
-                  Create Lobby (Host P1)
-                </button>
-                <div className="flex gap-2">
-                  <input
-                    value={joinInput}
-                    onChange={(e) => setJoinInput(e.target.value.toUpperCase().slice(0, 4))}
-                    placeholder="KODE ROOM (4 HURUF)"
-                    aria-label="Room Code"
-                    className="font-pixel flex-1 border-2 border-neutral-700 bg-black px-3 py-2 text-center text-xl uppercase tracking-widest text-amber-200 placeholder:text-neutral-600 focus:border-amber-500 focus:outline-none"
-                  />
-                  <button
-                    onClick={() => joinInput.length === 4 && connectRoom(joinInput, 'CLIENT')}
-                    disabled={joinInput.length !== 4}
-                    className="font-creep cursor-pointer border-2 border-sky-500 bg-sky-950/60 px-5 py-2 text-xl uppercase text-sky-200 shadow-[0_4px_0_#0c4a6e] transition hover:bg-sky-900/70 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    Join (P2)
-                  </button>
-                </div>
-                {lobbyError && <p className="text-base text-red-400">{lobbyError}</p>}
+              <div className="mt-4 space-y-2 rounded-lg bg-black/60 p-3.5 text-sm text-neutral-300">
+                <p>
+                  <strong className="text-sky-300">Player 1:</strong> Gerak <span className="text-white">{p1Btn}</span> · Repair QTE <span className="text-amber-200">W A S D</span>
+                </p>
+                <p>
+                  <strong className="text-amber-300">Player 2:</strong> Gerak <span className="text-white">{p2Btn}</span> · Repair QTE <span className="text-amber-200">↑ ← ↓ →</span>
+                </p>
+                <p className="text-xs text-neutral-400">
+                  Saat zombie/skeleton menempel, tekan tombol gerak P1 &amp; P2 secara bergantian untuk menggoyangkan lift.
+                </p>
               </div>
             </div>
           </div>
-
-          {/* Pixel Control Manual Footer */}
-          <div className="grid w-full grid-cols-2 gap-4 border-2 border-[#381414] bg-[#0d0607]/90 p-3 text-left shadow-[6px_6px_0_#000]">
-            <div className="border-r border-[#381414] pr-3">
-              <p className="font-creep text-lg text-sky-400">PLAYER 1</p>
-              <p className="mt-1 text-lg text-neutral-300">Gerak: <span className="text-white">{p1Btn}</span></p>
-              <p className="text-lg text-neutral-400">QTE Kabel: <span className="text-amber-200">W A S D</span></p>
-            </div>
-            <div className="pl-1">
-              <p className="font-creep text-lg text-amber-300">PLAYER 2</p>
-              <p className="mt-1 text-lg text-neutral-300">Gerak: <span className="text-white">{p2Btn}</span></p>
-              <p className="text-lg text-neutral-400">QTE Kabel: <span className="text-amber-200">↑ ← ↓ →</span></p>
-            </div>
-          </div>
-        </div>
+        )}
       </main>
     );
   }
@@ -371,8 +348,8 @@ export default function Home() {
   const qte = hud.qte;
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-black p-4 font-mono text-neutral-200">
-      <div className="relative w-full max-w-[800px]">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-black p-3 font-mono text-neutral-200">
+      <div className="relative w-full max-w-[1200px]">
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-4 p-3">
           <div className="rounded bg-black/70 px-3 py-1 text-lg font-bold text-amber-300">
             FLOOR {hud.floor}/{TOTAL_FLOORS}

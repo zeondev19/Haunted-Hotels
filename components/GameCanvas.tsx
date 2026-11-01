@@ -20,16 +20,17 @@ import {
   type QteState,
 } from '@/types/game';
 
-const W = 800;
-const H = 600;
+const W = 1200;
+const H = 620;
 
-const SHAFT_L = 220;
-const SHAFT_R = 580;
+const SHAFT_L = 420;
+const SHAFT_R = 780;
+const ROOM_BAY_W = 220;
 const LIFT_W = 164;
 const LIFT_H = 172;
 const LIFT_X = (W - LIFT_W) / 2;
 /** Screen Y of the cabin's bottom edge; the camera follows the lift. */
-const BASE_Y = 430;
+const BASE_Y = 445;
 
 const BASE_SPEED = 210;
 const GHOST_W = 48;
@@ -72,22 +73,47 @@ const QTE_STEPS = 4;
 const QTE_DAMAGE = 25;
 const QTE_DROP = 150;
 const QTE_KEYS: QteKey[] = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
-const INTRO_DURATION = 3.8;
+const INTRO_DURATION = 3.0;
+const OUTRO_DURATION = 2.8;
 
 /** Source regions inside Vintage Steampunk Elevator Asset Collection-no-bg.png & Gothic Horror Elevator Sprite Sheet.png. */
 const STEAM_OPEN = { sx: 425, sy: 12, sw: 381, sh: 407 };
-const STEAM_GATE = { sx: 429, sy: 590, sw: 319, sh: 365 };
 const ELEV_CABLE = { sx: 970, sy: 30, sw: 39, sh: 450 };
+/** Uniformly repacked character sprite grids (char_stand.png, char_tremble.png, char_walk.png). */
+const CHAR_STAND_CELL = { w: 280, h: 285, cols: 6 };
+const CHAR_TREMBLE_CELL = { w: 280, h: 295, cols: 6 };
+const CHAR_WALK_CELL = { w: 340, h: 330, cols: 5 };
 /** 3 Gothic corridor bays inside Gothic Pixel-Art Hotel Corridor Doors 101-103-no-bg.png (1536x1024). */
 const CORRIDOR_BAYS = [
   { sx: 16, sy: 216, sw: 516, sh: 575, doorSx: 202, doorSw: 128 },
   { sx: 496, sy: 216, sw: 542, sh: 575, doorSx: 703, doorSw: 128 },
   { sx: 994, sy: 216, sw: 526, sh: 575, doorSx: 1201, doorSw: 128 },
 ];
+/** Slices inside Gothic Hotel Corridor Tileset (corridor_tileset.png, 1455x1081). */
+const TILESET_WALL = { sx: 14, sy: 13, sw: 461, sh: 376 };
+const TILESET_CARPET = { sx: 14, sy: 455, sw: 750, sh: 125 };
+const TILESET_PILLAR = { sx: 212, sy: 658, sw: 80, sh: 205 };
+const TILESET_CALL_PANEL = { sx: 1182, sy: 904, sw: 37, sh: 136 };
+const TILESET_WALL_DECOR = [
+  { sx: 719, sy: 658, sw: 77, sh: 171, dw: 30, dh: 64 }, // Ornate gold mirror
+  { sx: 831, sy: 684, sw: 100, sh: 132, dw: 42, dh: 54 }, // Dark gothic portrait
+  { sx: 588, sy: 680, sw: 98, sh: 73, dw: 44, dh: 32 }, // Plaque 201-203
+];
+const TILESET_FURNITURE = [
+  { sx: 234, sy: 940, sw: 149, sh: 85, dw: 82, dh: 48 }, // Red velvet sofa
+  { sx: 439, sy: 910, sw: 132, sh: 129, dw: 66, dh: 64 }, // Gothic rose table
+  { sx: 42, sy: 877, sw: 123, sh: 178, dw: 58, dh: 84 }, // Brass birdcage luggage cart
+  { sx: 644, sy: 929, sw: 116, sh: 110, dw: 58, dh: 56 }, // Dark carved cabinet
+  { sx: 803, sy: 922, sw: 108, sh: 117, dw: 54, dh: 58 }, // Stacked vintage suitcases
+  { sx: 1299, sy: 684, sw: 87, sh: 183, dw: 44, dh: 86 }, // Potted gothic palm
+];
 
 const BGM_SRC = '/music/musik_latar_1.wav';
 const GHOST_SFX = '/music/ghost.wav';
 const ELEVATOR_HIT_SFX = '/music/elevator_hit.ogg';
+const BANG_SHORT_SFX = '/music/bang_short.ogg';
+const BANG_MID_SFX = '/music/bang_mid.ogg';
+const BANG_LONG_SFX = '/music/bang_long.ogg';
 const SKELETON_SFX = Array.from({ length: 10 }, (_, i) => `/music/${i}.ogg`);
 const ZOMBIE_SFX = [1, 2, 3, 4].map((i) => `/music/zombieYell${i}.wav`);
 
@@ -101,7 +127,7 @@ function playClip(src: string, volume = 0.65) {
   }
 }
 
-function playSfx(kind: 'door' | 'step' | 'gate') {
+function playSfx(kind: 'door' | 'step') {
   try {
     const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     const ac = new Ctx();
@@ -118,7 +144,7 @@ function playSfx(kind: 'door' | 'step' | 'gate') {
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
       osc.start(now);
       osc.stop(now + 0.5);
-    } else if (kind === 'step') {
+    } else {
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(110, now);
       osc.frequency.exponentialRampToValueAtTime(45, now + 0.06);
@@ -126,14 +152,6 @@ function playSfx(kind: 'door' | 'step' | 'gate') {
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
       osc.start(now);
       osc.stop(now + 0.07);
-    } else {
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(220, now);
-      osc.frequency.exponentialRampToValueAtTime(55, now + 0.35);
-      gain.gain.setValueAtTime(0.18, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
-      osc.start(now);
-      osc.stop(now + 0.38);
     }
   } catch {
     // Ignore audio context restrictions if blocked.
@@ -172,7 +190,19 @@ function difficulty(floor: number): Difficulty | null {
 }
 
 type Sprites = Record<
-  'elevator' | 'steampunk' | 'corridor' | 'ghost' | 'cuteGhost' | 'zombie' | 'skeleton' | 'shaft',
+  | 'elevator'
+  | 'steampunk'
+  | 'corridor'
+  | 'tileset'
+  | 'gothicWall'
+  | 'charStand'
+  | 'charTremble'
+  | 'charWalk'
+  | 'ghost'
+  | 'cuteGhost'
+  | 'zombie'
+  | 'skeleton'
+  | 'shaft',
   HTMLImageElement
 >;
 
@@ -235,6 +265,11 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
       elevator: loadSprite('/assets/elevator.png'),
       steampunk: loadSprite('/assets/steampunk_elevator.png'),
       corridor: loadSprite('/assets/corridor.png'),
+      tileset: loadSprite('/assets/corridor_tileset.png'),
+      gothicWall: loadSprite('/assets/gothic_wall.png'),
+      charStand: loadSprite('/assets/char_stand.png'),
+      charTremble: loadSprite('/assets/char_tremble.png'),
+      charWalk: loadSprite('/assets/char_walk.png'),
       ghost: loadSprite('/assets/ghost.png'),
       cuteGhost: loadSprite('/assets/cute_ghost.png'),
       zombie: loadSprite('/assets/zombie.png'),
@@ -242,6 +277,7 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
       shaft: loadSprite('/assets/shaft_bg.png'),
     };
     let shaftPattern: CanvasPattern | null = null;
+    let gothicWallPattern: CanvasPattern | null = null;
 
     const bgm = new Audio(BGM_SRC);
     bgm.loop = true;
@@ -250,10 +286,14 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
 
     const s = createState();
     const keys = new Set<string>();
+    const p1OnlineHeld = new Set<QteKey>();
     const p2OnlineHeld = new Set<QteKey>();
     const seenGhosts = new Set<number>();
     const seenCrawlers = new Set<number>();
     let skeletonStepTimer = 0;
+    let hostTargetY = 0;
+    let lastLocalInputAt = 0;
+    let forceSync = false;
     const p2Role: PlayerRole = p1Role === 'UP' ? 'DOWN' : 'UP';
     const p1MoveKey = p1Role === 'UP' ? 'w' : 's';
     const p2MoveKey = p2Role === 'UP' ? 'ArrowUp' : 'ArrowDown';
@@ -262,9 +302,12 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
     let ghostTimer = 1.8;
     let crawlerTimer = 3.5;
     let time = 0;
+    let outroTime = 0;
     let doorSfxPlayed = false;
-    let gateSfxPlayed = false;
+    let outroDoorPlayed = false;
     let lastStepTick = 0;
+    let prevAudioState = s.state;
+    let prevAudioStacks = 0;
     let shakeTime = 0;
     let shakeMag = 0;
     let syncTimer = 0;
@@ -313,6 +356,7 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
         s.qte = idleQte();
         screenShake(1.2, 22);
       } else {
+        playClip(BANG_MID_SFX, 0.8);
         s.qte = newQte();
       }
     }
@@ -334,12 +378,14 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
     function applyPlayerTap(player: PlayerTurn, key: QteKey) {
       if (s.state === 'QTE') {
         handleQteKey(player, key);
+        forceSync = true;
       } else if (s.state === 'PLAYING' && s.weightStacks > 0) {
         const assignedRole = player === 'P1' ? p1Role : p2Role;
         // Must alternate between P1 and P2 pressing their assigned single movement key (cannot solo shake).
         if (key === assignedRole && lastShakePlayer !== player) {
           s.shakeGauge = Math.min(100, s.shakeGauge + SHAKE_GAIN);
           lastShakePlayer = player;
+          forceSync = true;
           if (s.shakeGauge >= 100) {
             dropAttachedCrawlers();
             screenShake(0.25, 6);
@@ -351,19 +397,62 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
     if (mode === 'HOST' && channel) {
       channel.on('broadcast', { event: 'input' }, ({ payload }: { payload: PlayerInputPayload }) => {
         if (payload.type === 'HOLD') {
-          if (payload.held) p2OnlineHeld.add(payload.key);
-          else p2OnlineHeld.delete(payload.key);
+          if (payload.held) {
+            p2OnlineHeld.add(payload.key);
+            applyPlayerTap('P2', payload.key);
+          } else {
+            p2OnlineHeld.delete(payload.key);
+          }
+          forceSync = true;
         } else if (payload.type === 'TAP') {
           applyPlayerTap('P2', payload.key);
         }
       });
     } else if (mode === 'CLIENT' && channel) {
+      channel.on('broadcast', { event: 'p1_input' }, ({ payload }: { payload: PlayerInputPayload }) => {
+        if (payload.held) p1OnlineHeld.add(payload.key);
+        else p1OnlineHeld.delete(payload.key);
+      });
       channel.on('broadcast', { event: 'state' }, ({ payload }: { payload: GameState }) => {
         if (payload.hp < s.hp) {
           if (s.state === 'PLAYING') playClip(ELEVATOR_HIT_SFX, 0.85);
           screenShake(0.4, 12);
         }
-        Object.assign(s, payload);
+        const recentlyPressed = performance.now() - lastLocalInputAt < 180;
+        if (!recentlyPressed || Math.abs(payload.y - s.y) > 160 || payload.state !== 'PLAYING') {
+          hostTargetY = payload.y;
+        }
+        if (Math.abs(payload.y - s.y) > 160 || payload.state !== 'PLAYING') {
+          s.y = payload.y;
+          s.speed = payload.speed;
+        }
+        s.hp = payload.hp;
+        s.state = payload.state;
+        s.weightStacks = payload.weightStacks;
+        if (!recentlyPressed || payload.weightStacks === 0) {
+          s.shakeGauge = payload.shakeGauge;
+        }
+        s.qte = payload.qte;
+        // Smoothly merge ghosts & crawlers so 60 FPS local extrapolation never stutters
+        const prevGhosts = new Map(s.ghosts.map((g) => [g.id, g]));
+        s.ghosts = payload.ghosts.map((hg) => {
+          const cur = prevGhosts.get(hg.id);
+          if (!cur) return hg;
+          return {
+            ...hg,
+            x: Math.abs(hg.x - cur.x) > 90 ? hg.x : cur.x + (hg.x - cur.x) * 0.35,
+            warningTimer: Math.min(cur.warningTimer, hg.warningTimer),
+          };
+        });
+        const prevCrawlers = new Map(s.crawlers.map((c) => [c.id, c]));
+        s.crawlers = payload.crawlers.map((hc) => {
+          const cur = prevCrawlers.get(hc.id);
+          if (!cur || hc.attached || hc.falling) return hc;
+          return {
+            ...hc,
+            y: Math.abs(hc.y - cur.y) > 90 ? hc.y : cur.y + (hc.y - cur.y) * 0.35,
+          };
+        });
       });
     }
 
@@ -377,9 +466,14 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
       if (!firstPress) return;
 
       if (mode === 'CLIENT') {
+        lastLocalInputAt = performance.now();
         channel?.send({ type: 'broadcast', event: 'input', payload: { type: 'HOLD', key: input.key, held: true } });
-        channel?.send({ type: 'broadcast', event: 'input', payload: { type: 'TAP', key: input.key } });
+        applyPlayerTap('P2', input.key);
         return;
+      }
+      if (mode === 'HOST') {
+        channel?.send({ type: 'broadcast', event: 'p1_input', payload: { type: 'HOLD', key: input.key, held: true } });
+        forceSync = true;
       }
       const player: PlayerTurn = mode === 'HOST' ? 'P1' : input.player;
       applyPlayerTap(player, input.key);
@@ -389,7 +483,11 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
       const input = KEYMAP[k];
       keys.delete(k);
       if (mode === 'CLIENT' && input) {
+        lastLocalInputAt = performance.now();
         channel?.send({ type: 'broadcast', event: 'input', payload: { type: 'HOLD', key: input.key, held: false } });
+      } else if (mode === 'HOST' && input) {
+        channel?.send({ type: 'broadcast', event: 'p1_input', payload: { type: 'HOLD', key: input.key, held: false } });
+        forceSync = true;
       }
     };
     const onBlur = () => keys.clear();
@@ -421,34 +519,41 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
           doorSfxPlayed = true;
           playSfx('door');
         }
-        if (time >= 0.8 && time < 3.0) {
+        if (time >= 0.8 && time < 2.85) {
           const tick = Math.floor(time * 5);
           if (tick !== lastStepTick) {
             lastStepTick = tick;
             playSfx('step');
           }
         }
-        if (!gateSfxPlayed && time >= 3.1) {
-          gateSfxPlayed = true;
-          playSfx('gate');
-        }
         return;
       }
-      if (mode === 'CLIENT') return;
       if (s.state === 'QTE') {
-        s.qte.timer -= dt;
-        if (s.qte.timer <= 0) failQte();
+        s.qte.timer = Math.max(0, s.qte.timer - dt);
+        if (mode !== 'CLIENT' && s.qte.timer <= 0) {
+          failQte();
+          forceSync = true;
+        }
         return;
       }
       if (s.state !== 'PLAYING') return;
 
       const p1Active =
-        mode === 'HOST'
-          ? p1Role === 'UP'
+        mode === 'CLIENT'
+          ? p1OnlineHeld.has(p1Role)
+          : mode === 'HOST'
+            ? p1Role === 'UP'
+              ? held('w') || held('ArrowUp')
+              : held('s') || held('ArrowDown')
+            : held(p1MoveKey);
+      const p2Active =
+        mode === 'CLIENT'
+          ? p2Role === 'UP'
             ? held('w') || held('ArrowUp')
             : held('s') || held('ArrowDown')
-          : held(p1MoveKey);
-      const p2Active = mode === 'HOST' ? p2OnlineHeld.has(p2Role) : held(p2MoveKey);
+          : mode === 'HOST'
+            ? p2OnlineHeld.has(p2Role)
+            : held(p2MoveKey);
       const p1Dir = p1Active ? (p1Role === 'UP' ? 1 : -1) : 0;
       const p2Dir = p2Active ? (p2Role === 'UP' ? 1 : -1) : 0;
       // Smoothly ramp velocity toward target so starting/stopping feels like a real heavy cabin.
@@ -456,27 +561,63 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
       s.speed += (targetSpeed - s.speed) * Math.min(1, dt * 11);
       s.y = Math.max(0, s.y + s.speed * dt);
 
-      if (s.y >= MAX_HEIGHT) {
+      if (s.y >= MAX_HEIGHT || (mode === 'CLIENT' && hostTargetY >= MAX_HEIGHT)) {
+        if (outroTime === 0 && mode === 'HOST') forceSync = true;
         s.y = MAX_HEIGHT;
-        s.state = 'VICTORY';
+        s.speed = 0;
+        s.ghosts = [];
+        s.crawlers = [];
+        s.weightStacks = 0;
+        outroTime += dt;
+        if (!outroDoorPlayed && outroTime >= 0.15) {
+          outroDoorPlayed = true;
+          playSfx('door');
+        }
+        if (outroTime >= 0.35 && outroTime < 2.25) {
+          const tick = Math.floor(outroTime * 5);
+          if (tick !== lastStepTick) {
+            lastStepTick = tick;
+            playSfx('step');
+          }
+        }
+        if (mode !== 'CLIENT' && outroTime >= OUTRO_DURATION) {
+          s.state = 'VICTORY';
+          forceSync = true;
+        }
         return;
       }
 
-      const diff = difficulty(floorOf(s.y));
+      if (mode === 'CLIENT') {
+        if (hostTargetY > 0) {
+          hostTargetY = Math.max(0, hostTargetY + s.speed * dt);
+          s.y += (hostTargetY - s.y) * Math.min(1, dt * 6);
+        }
+        for (const g of s.ghosts) {
+          if (g.warningTimer > 0) g.warningTimer = Math.max(0, g.warningTimer - dt);
+          else g.x += (g.direction === 'RIGHT' ? 1 : -1) * g.speed * dt;
+        }
+        updateCrawlers(dt);
+        if (s.weightStacks > 0) s.shakeGauge = Math.max(0, s.shakeGauge - SHAKE_DECAY * dt);
+        return;
+      }
 
-      // Ghosts
+      const currentFloor = floorOf(s.y);
+      const diff = difficulty(currentFloor);
+
+      // Ghosts: on Floors 8-9 (heading to Floor 10), dual ghosts spawn tight enough that the lift cannot park between them.
       ghostTimer -= dt;
       if (diff && ghostTimer <= 0 && s.y > 120) {
         const leadY = s.speed * GHOST_WARNING * 0.85;
         const primaryLane = pick(diff.lanes);
         const y1 = s.y + leadY + LANE_OFFSETS[primaryLane];
+        const minGapY = currentFloor >= 8 ? 95 : MIN_GHOST_GAP_Y;
         const candidateYs =
-          diff.dualGhosts && Math.random() < 0.65
-            ? [y1, y1 + (primaryLane === 0 ? -MIN_GHOST_GAP_Y : MIN_GHOST_GAP_Y)]
+          diff.dualGhosts && Math.random() < (currentFloor >= 8 ? 0.85 : 0.65)
+            ? [y1, y1 + (primaryLane === 0 ? -minGapY : minGapY)]
             : [y1];
 
         for (const gy of candidateYs) {
-          if (gy < 120 || s.ghosts.some((existing) => Math.abs(existing.y - gy) < MIN_GHOST_GAP_Y)) continue;
+          if (gy < 120 || s.ghosts.some((existing) => Math.abs(existing.y - gy) < minGapY)) continue;
           const direction = Math.random() < 0.5 ? 'RIGHT' : 'LEFT';
           s.ghosts.push({
             id: nextId++,
@@ -490,6 +631,7 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
           });
         }
         ghostTimer = rand(diff.ghostEvery);
+        forceSync = true;
       }
 
       s.ghosts = s.ghosts.filter((g) => {
@@ -508,6 +650,7 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
           s.hp = Math.max(0, s.hp - GHOST_DAMAGE);
           playClip(ELEVATOR_HIT_SFX, 0.85);
           screenShake(0.35, 10);
+          forceSync = true;
           return false;
         }
         return g.x > -GHOST_W * 2 && g.x < W + GHOST_W * 2;
@@ -516,6 +659,7 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
       if (s.hp <= 0) {
         s.state = 'GAMEOVER';
         screenShake(1.2, 22);
+        forceSync = true;
         return;
       }
 
@@ -534,8 +678,11 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
           });
         }
         crawlerTimer = rand(diff.crawlerEvery);
+        forceSync = true;
       }
+      const prevStacks = s.weightStacks;
       updateCrawlers(dt);
+      if (s.weightStacks !== prevStacks) forceSync = true;
 
       // Shake Gauge ("Goyangkan Lift")
       if (s.weightStacks > 0) {
@@ -550,6 +697,7 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
         s.shakeGauge = 0;
         s.qte = newQte();
         screenShake(0.5, 14);
+        forceSync = true;
       }
     }
 
@@ -578,51 +726,156 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
       ctx!.restore();
     }
 
-    function drawWallTile(x0: number, x1: number, offset: number, darken: number, fallbackShades: string[], mortar: string) {
-      if (!ready(sprites.shaft)) {
+    function drawWallTile(
+      x0: number,
+      x1: number,
+      offset: number,
+      darken: number,
+      useGothicPanel: boolean,
+      fallbackShades: string[],
+      mortar: string,
+    ) {
+      const img = useGothicPanel ? sprites.gothicWall : sprites.shaft;
+      if (!ready(img)) {
         drawBricks(x0, x1, offset, fallbackShades, mortar);
         return;
       }
-      shaftPattern ??= ctx!.createPattern(sprites.shaft, 'repeat');
-      const th = sprites.shaft.naturalHeight;
+      if (useGothicPanel) gothicWallPattern ??= ctx!.createPattern(img, 'repeat');
+      else shaftPattern ??= ctx!.createPattern(img, 'repeat');
+      const pat = useGothicPanel ? gothicWallPattern : shaftPattern;
+      const th = img.naturalHeight;
       ctx!.save();
       ctx!.beginPath();
       ctx!.rect(x0, 0, x1 - x0, H);
       ctx!.clip();
       ctx!.translate(x0, offset % th);
-      ctx!.fillStyle = shaftPattern!;
+      ctx!.fillStyle = pat!;
       ctx!.fillRect(0, -th, x1 - x0, H + th * 2);
       if (darken > 0) {
-        ctx!.fillStyle = `rgba(0,0,0,${darken})`;
+        ctx!.fillStyle = `rgba(10,5,3,${darken})`;
         ctx!.fillRect(0, -th, x1 - x0, H + th * 2);
       }
       ctx!.restore();
     }
 
+    function drawExtendedWing(extX: number, extW: number, topY: number, roomH: number, floorIndex: number, side: number) {
+      if (!ready(sprites.tileset)) return;
+      // 1. Gothic corridor wall from Gothic Hotel Corridor Tileset
+      ctx!.drawImage(
+        sprites.tileset,
+        TILESET_WALL.sx,
+        TILESET_WALL.sy,
+        TILESET_WALL.sw,
+        TILESET_WALL.sh,
+        extX,
+        topY + 6,
+        extW,
+        roomH - 28,
+      );
+      // 2. Gold-trimmed crimson carpet runner floor along the bottom of the extended corridor
+      ctx!.drawImage(
+        sprites.tileset,
+        TILESET_CARPET.sx,
+        TILESET_CARPET.sy,
+        TILESET_CARPET.sw,
+        TILESET_CARPET.sh,
+        extX,
+        topY + roomH - 30,
+        extW,
+        30,
+      );
+      // Warm ambient darkening so it blends seamlessly with the adjacent room bay
+      ctx!.fillStyle = 'rgba(12,6,3,0.22)';
+      ctx!.fillRect(extX, topY + 6, extW, roomH - 6);
+
+      // Wall decor (ornate gold mirror, dark portrait, or room directional plaque)
+      const decor = TILESET_WALL_DECOR[(floorIndex + side) % TILESET_WALL_DECOR.length];
+      ctx!.drawImage(
+        sprites.tileset,
+        decor.sx,
+        decor.sy,
+        decor.sw,
+        decor.sh,
+        extX + extW * 0.56 - decor.dw / 2,
+        topY + 42,
+        decor.dw,
+        decor.dh,
+      );
+
+      // 3. Gothic corridor furniture along the floor (luggage cart, red velvet sofa, rose table, cabinet, suitcases, palm)
+      const furn = TILESET_FURNITURE[(floorIndex * 2 + side) % TILESET_FURNITURE.length];
+      const furnX = side === 0 ? extX + 26 : extX + extW - furn.dw - 26;
+      const furnY = topY + roomH - 18 - furn.dh;
+      ctx!.drawImage(sprites.tileset, furn.sx, furn.sy, furn.sw, furn.sh, furnX, furnY, furn.dw, furn.dh);
+
+      // 4. Carved Gothic divider pillar between the main room bay and the extended hallway
+      const pillarX = side === 0 ? extX + extW - 14 : extX - 10;
+      ctx!.drawImage(
+        sprites.tileset,
+        TILESET_PILLAR.sx,
+        TILESET_PILLAR.sy,
+        TILESET_PILLAR.sw,
+        TILESET_PILLAR.sh,
+        pillarX,
+        topY + 4,
+        24,
+        roomH - 8,
+      );
+    }
+
     function drawCorridor(floorIndex: number) {
       const slabY = toScreen(floorIndex * FLOOR_HEIGHT);
-      if (slabY < -220 || slabY > H + 50) return;
       const roomH = 200;
       const topY = slabY - 184;
+      if (slabY < -40 || topY > H + 40) return;
       const isTop = floorIndex >= MAX_HEIGHT / FLOOR_HEIGHT;
 
       for (const side of [0, 1]) {
-        const x0 = side === 0 ? 0 : SHAFT_R;
-        const x1 = side === 0 ? SHAFT_L : W;
-        const w = x1 - x0;
+        const wingX0 = side === 0 ? 0 : SHAFT_R;
+        const wingX1 = side === 0 ? SHAFT_L : W;
+        const wingW = wingX1 - wingX0;
+        // Inner room bay sits right next to the elevator shaft; outer hallway extends to the screen edge
+        const roomX = side === 0 ? SHAFT_L - ROOM_BAY_W : SHAFT_R;
+        const w = ROOM_BAY_W;
+        const extX = side === 0 ? 0 : SHAFT_R + ROOM_BAY_W;
+        const extW = wingW - ROOM_BAY_W;
+
         const openAmt =
           floorIndex === 0 && time > 0.15 && time < 3.4
             ? Math.min(1, (time - 0.15) / 0.5)
-            : 0;
+            : isTop && outroTime > 0.2 && outroTime < 2.5
+              ? outroTime < 2.1
+                ? Math.min(1, (outroTime - 0.2) / 0.45)
+                : Math.max(0, 1 - (outroTime - 2.1) / 0.35)
+              : 0;
 
         if (ready(sprites.corridor)) {
           const bayIndex = floorIndex === 0 ? side : (floorIndex + side) % CORRIDOR_BAYS.length;
           const bay = CORRIDOR_BAYS[bayIndex];
-          ctx!.drawImage(sprites.corridor, bay.sx, bay.sy, bay.sw, bay.sh, x0, topY, w, roomH);
+          ctx!.drawImage(sprites.corridor, bay.sx, bay.sy, bay.sw, bay.sh, roomX, topY, w, roomH);
 
-          // Opening cutscene on Floor 1: swing the gothic door leaf open
+          // Extended Gothic hallway using Gothic Hotel Corridor Tileset.png
+          drawExtendedWing(extX, extW, topY, roomH, floorIndex, side);
+
+          // Brass elevator call button panel next to the shaft
+          if (ready(sprites.tileset)) {
+            const callX = side === 0 ? SHAFT_L - 15 : SHAFT_R + 4;
+            ctx!.drawImage(
+              sprites.tileset,
+              TILESET_CALL_PANEL.sx,
+              TILESET_CALL_PANEL.sy,
+              TILESET_CALL_PANEL.sw,
+              TILESET_CALL_PANEL.sh,
+              callX,
+              topY + 78,
+              11,
+              42,
+            );
+          }
+
+          // Opening/ending cutscene: swing the gothic door leaf open
           if (openAmt > 0) {
-            const doorX = x0 + w * 0.376;
+            const doorX = roomX + w * 0.376;
             const doorY = topY + roomH * 0.272;
             const doorW = w * 0.248;
             const doorH = roomH * 0.535;
@@ -648,19 +901,27 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
           if (floorIndex > 0) {
             const plaqueW = 38;
             const plaqueH = 12;
-            const plaqueX = x0 + w / 2 - plaqueW / 2;
+            const plaqueX = roomX + w / 2 - plaqueW / 2;
             const plaqueY = topY + roomH * 0.184;
             ctx!.fillStyle = '#180f09';
             ctx!.fillRect(plaqueX, plaqueY, plaqueW, plaqueH);
             ctx!.fillStyle = isTop ? '#7fd1ff' : '#d9b44a';
             ctx!.font = 'bold 10px monospace';
             ctx!.textAlign = 'center';
-            ctx!.fillText(isTop ? '1008' : `${floorIndex + 1}0${side + 1}`, x0 + w / 2, plaqueY + 10);
+            ctx!.fillText(isTop ? '1008' : `${floorIndex + 1}0${side + 1}`, roomX + w / 2, plaqueY + 10);
           }
+
+          // Ornate dark bronze & gold structural beams framing top & bottom of the corridor wing
+          ctx!.fillStyle = '#140c08';
+          ctx!.fillRect(wingX0, topY - 4, wingW, 10);
+          ctx!.fillRect(wingX0, slabY, wingW, 14);
+          ctx!.fillStyle = '#6b4c21';
+          ctx!.fillRect(wingX0, topY + 5, wingW, 2);
+          ctx!.fillRect(wingX0, slabY, wingW, 2);
 
           // Subtle flickering candle glow over the corridor candelabra
           const flicker = Math.sin(time * 13 + floorIndex + side) > -0.7 ? 1 : 0.35;
-          const candleX = x0 + w * 0.18;
+          const candleX = roomX + w * 0.18;
           const candleY = topY + roomH * 0.38;
           const glow = ctx!.createRadialGradient(candleX, candleY, 2, candleX, candleY, 55);
           glow.addColorStop(0, `rgba(255,190,90,${0.38 * flicker})`);
@@ -674,7 +935,7 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
         grad.addColorStop(0, isTop ? '#1b2238' : '#2a1610');
         grad.addColorStop(1, isTop ? '#2c3658' : '#4a2a18');
         ctx!.fillStyle = grad;
-        ctx!.fillRect(x0, slabY - 150, w, 150);
+        ctx!.fillRect(wingX0, slabY - 150, wingW, 150);
       }
 
       ctx!.fillStyle = '#1c1410';
@@ -827,21 +1088,32 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
     }
 
     function drawElevatorAndPlayers(liftX: number, liftTop: number) {
-      const walkProgress = Math.max(0, Math.min(1, (time - 0.65) / 2.2));
-      const walking = time >= 0.65 && time < 2.85;
-      const maleX = 110 + (liftX + 58 - 110) * walkProgress;
-      const femaleX = 690 + (liftX + LIFT_W - 58 - 690) * walkProgress;
-      const insideLift = walkProgress >= 0.85;
-      const gateProgress = Math.max(0, Math.min(1, (time - 2.95) / 0.3));
+      const isOutro = outroTime > 0;
+      const walkProgress = isOutro
+        ? Math.max(0, Math.min(1, (outroTime - 0.35) / 1.8))
+        : Math.max(0, Math.min(1, (time - 0.65) / 2.2));
+      const walking = isOutro ? outroTime >= 0.35 && outroTime < 2.15 : time >= 0.65 && time < 2.85;
+      const leftDoorX = SHAFT_L - ROOM_BAY_W / 2;
+      const rightDoorX = SHAFT_R + ROOM_BAY_W / 2;
+      const girlX = isOutro
+        ? liftX + 54 + (leftDoorX - (liftX + 54)) * walkProgress
+        : leftDoorX + (liftX + 54 - leftDoorX) * walkProgress;
+      const boyX = isOutro
+        ? liftX + LIFT_W - 54 + (rightDoorX - (liftX + LIFT_W - 54)) * walkProgress
+        : rightDoorX + (liftX + LIFT_W - 54 - rightDoorX) * walkProgress;
+      const insideLift = isOutro ? walkProgress < 0.15 : walkProgress >= 0.85;
+      const enteredRoom = isOutro && walkProgress >= 0.92;
 
       if (!ready(sprites.steampunk)) {
         drawLiftFallback(liftX, liftTop);
-        drawCharacter(maleX, BASE_Y - 8, false, walking);
-        drawCharacter(femaleX, BASE_Y - 8, true, walking);
+        if (!enteredRoom) {
+          drawCharacter(girlX, BASE_Y - 8, true, walking);
+          drawCharacter(boyX, BASE_Y - 8, false, walking);
+        }
         return;
       }
 
-      // 1. Open Vintage Steampunk elevator cabin (chandelier, ruby crest, sconces, red carpet)
+      // 1. Open Vintage Steampunk elevator cabin (door/gate removed so characters inside are always visible)
       ctx!.drawImage(
         sprites.steampunk,
         STEAM_OPEN.sx,
@@ -854,35 +1126,72 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
         LIFT_H,
       );
 
-      // 2. Players inside the cabin (drawn behind the accordion brass gate)
+      // 2. Players inside the open cabin: tremble when the lift moves/panics, stand still when stationary
       if (insideLift) {
-        drawCharacter(maleX, BASE_Y - 14, false, walking);
-        drawCharacter(femaleX, BASE_Y - 14, true, walking);
+        const scared = Math.abs(s.speed) > 12 || s.state === 'QTE' || s.weightStacks > 0;
+        const pairW = 88;
+        const pairH = 90;
+        const pairX = liftX + (LIFT_W - pairW) / 2;
+        const pairY = BASE_Y - 11 - pairH;
+        if (scared && ready(sprites.charTremble)) {
+          const col = Math.floor(time * 12) % CHAR_TREMBLE_CELL.cols;
+          ctx!.drawImage(
+            sprites.charTremble,
+            col * CHAR_TREMBLE_CELL.w,
+            0,
+            CHAR_TREMBLE_CELL.w,
+            CHAR_TREMBLE_CELL.h,
+            pairX,
+            pairY,
+            pairW,
+            pairH,
+          );
+        } else if (ready(sprites.charStand)) {
+          const col = Math.floor(time * 4) % CHAR_STAND_CELL.cols;
+          ctx!.drawImage(
+            sprites.charStand,
+            col * CHAR_STAND_CELL.w,
+            0,
+            CHAR_STAND_CELL.w,
+            CHAR_STAND_CELL.h,
+            pairX,
+            pairY,
+            pairW,
+            pairH,
+          );
+        } else {
+          drawCharacter(girlX, BASE_Y - 14, true, false);
+          drawCharacter(boyX, BASE_Y - 14, false, false);
+        }
       }
 
-      // 3. Sliding brass accordion gate once players step inside
-      if (gateProgress > 0) {
-        const doorwayX = liftX + 28;
-        const doorwayY = liftTop + 26;
-        const doorwayW = (LIFT_W - 56) * gateProgress;
-        const doorwayH = LIFT_H - 34;
-        ctx!.drawImage(
-          sprites.steampunk,
-          STEAM_GATE.sx,
-          STEAM_GATE.sy,
-          STEAM_GATE.sw,
-          STEAM_GATE.sh,
-          doorwayX,
-          doorwayY,
-          doorwayW,
-          doorwayH,
-        );
-      }
-
-      // 4. Players still walking in the corridor
-      if (!insideLift && time >= 0.35) {
-        drawCharacter(maleX, BASE_Y - 10, false, walking);
-        drawCharacter(femaleX, BASE_Y - 10, true, walking);
+      // 3. Players walking in the corridor (Floor 1 intro or Floor 10 Room 1008 outro)
+      if (!insideLift && !enteredRoom && (isOutro || time >= 0.35)) {
+        if (ready(sprites.charWalk)) {
+          const walkW = 82;
+          const walkH = 80;
+          const walkY = BASE_Y - 8 - walkH;
+          const col = walking ? Math.floor(time * 8) % CHAR_WALK_CELL.cols : 0;
+          const sx = col * CHAR_WALK_CELL.w;
+          ctx!.save();
+          if (isOutro) {
+            ctx!.translate(girlX, 0);
+            ctx!.scale(-1, 1);
+            ctx!.drawImage(sprites.charWalk, sx, 0, CHAR_WALK_CELL.w, CHAR_WALK_CELL.h, -walkW / 2, walkY, walkW, walkH);
+            ctx!.restore();
+            ctx!.save();
+            ctx!.translate(boyX, 0);
+            ctx!.scale(-1, 1);
+            ctx!.drawImage(sprites.charWalk, sx, CHAR_WALK_CELL.h, CHAR_WALK_CELL.w, CHAR_WALK_CELL.h, -walkW / 2, walkY, walkW, walkH);
+          } else {
+            ctx!.drawImage(sprites.charWalk, sx, 0, CHAR_WALK_CELL.w, CHAR_WALK_CELL.h, girlX - walkW / 2, walkY, walkW, walkH);
+            ctx!.drawImage(sprites.charWalk, sx, CHAR_WALK_CELL.h, CHAR_WALK_CELL.w, CHAR_WALK_CELL.h, boyX - walkW / 2, walkY, walkW, walkH);
+          }
+          ctx!.restore();
+        } else {
+          drawCharacter(girlX, BASE_Y - 10, true, walking);
+          drawCharacter(boyX, BASE_Y - 10, false, walking);
+        }
       }
     }
 
@@ -992,19 +1301,22 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
         ctx!.translate((Math.random() - 0.5) * shakeMag * 2, (Math.random() - 0.5) * shakeMag * 2);
       }
 
-      drawWallTile(SHAFT_L, SHAFT_R, s.y * 0.5, 0.45, ['#1a1414', '#1e1717', '#161111'], '#0b0909');
-      drawWallTile(0, SHAFT_L, s.y, 0.1, ['#3a2420', '#43291f', '#332019'], '#140c0a');
-      drawWallTile(SHAFT_R, W, s.y, 0.1, ['#3a2420', '#43291f', '#332019'], '#140c0a');
+      drawWallTile(SHAFT_L, SHAFT_R, s.y * 0.5, 0.32, false, ['#1a120d', '#1e1510', '#160f0b'], '#0b0705');
+      drawWallTile(0, SHAFT_L, s.y, 0.18, true, ['#241710', '#2b1c13', '#1d120c'], '#110a07');
+      drawWallTile(SHAFT_R, W, s.y, 0.18, true, ['#241710', '#2b1c13', '#1d120c'], '#110a07');
 
-      const first = Math.max(0, Math.floor((s.y - H) / FLOOR_HEIGHT));
-      const lastFloor = Math.min(MAX_HEIGHT / FLOOR_HEIGHT, Math.ceil((s.y + H) / FLOOR_HEIGHT));
+      const first = Math.max(0, Math.floor((s.y - H) / FLOOR_HEIGHT) - 1);
+      const lastFloor = Math.min(MAX_HEIGHT / FLOOR_HEIGHT, Math.ceil((s.y + H) / FLOOR_HEIGHT) + 1);
       for (let f = first; f <= lastFloor; f++) drawCorridor(f);
 
-      // Guide rails with scrolling rivets
-      ctx!.fillStyle = '#2d2d2d';
+      // Ornate dark bronze & brass guide rails along the elevator shaft
+      ctx!.fillStyle = '#24170f';
       ctx!.fillRect(SHAFT_L, 0, 10, H);
       ctx!.fillRect(SHAFT_R - 10, 0, 10, H);
-      ctx!.fillStyle = '#5a5a5a';
+      ctx!.fillStyle = '#705124';
+      ctx!.fillRect(SHAFT_L + 8, 0, 2, H);
+      ctx!.fillRect(SHAFT_R - 10, 0, 2, H);
+      ctx!.fillStyle = '#a67c37';
       const rivetOff = s.y % 40;
       for (let ry = rivetOff - 40; ry < H; ry += 40) {
         ctx!.fillRect(SHAFT_L + 3, ry, 4, 4);
@@ -1028,9 +1340,9 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
 
       ctx!.restore();
 
-      const v = ctx!.createRadialGradient(W / 2, H / 2, 200, W / 2, H / 2, 520);
+      const v = ctx!.createRadialGradient(W / 2, H / 2, 260, W / 2, H / 2, 720);
       v.addColorStop(0, 'rgba(0,0,0,0)');
-      v.addColorStop(1, s.state === 'QTE' ? 'rgba(120,0,0,0.8)' : 'rgba(0,0,0,0.75)');
+      v.addColorStop(1, s.state === 'QTE' ? 'rgba(120,0,0,0.8)' : 'rgba(0,0,0,0.72)');
       ctx!.fillStyle = v;
       ctx!.fillRect(0, 0, W, H);
     }
@@ -1060,6 +1372,18 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
     }
 
     function syncAudio(dt: number) {
+      if (s.weightStacks === 0 && prevAudioStacks > 0 && s.state === 'PLAYING' && outroTime === 0) {
+        playClip(BANG_SHORT_SFX, 0.8);
+      }
+      if (s.state === 'QTE' && prevAudioState !== 'QTE') {
+        playClip(BANG_MID_SFX, 0.85);
+      }
+      if (s.state === 'GAMEOVER' && prevAudioState !== 'GAMEOVER') {
+        playClip(BANG_LONG_SFX, 0.9);
+      }
+      prevAudioStacks = s.weightStacks;
+      prevAudioState = s.state;
+
       let playedGhostWave = false;
       for (const g of s.ghosts) {
         if (!seenGhosts.has(g.id)) {
@@ -1087,8 +1411,9 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
       }
     }
 
-    function loop(now: number) {
+    function stepFrame(now: number) {
       const dt = Math.min(0.05, (now - last) / 1000);
+      if (dt <= 0) return;
       last = now;
       time += dt;
       shakeTime = Math.max(0, shakeTime - dt);
@@ -1096,19 +1421,29 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
       syncAudio(dt);
       if (mode === 'HOST' && channel) {
         syncTimer += dt;
-        if (syncTimer >= 0.033 || s.state !== 'PLAYING') {
+        if (forceSync || (s.state === 'PLAYING' && syncTimer >= 0.1)) {
           syncTimer = 0;
+          forceSync = false;
           channel.send({ type: 'broadcast', event: 'state', payload: s });
         }
       }
       render();
       pushHud();
+    }
+    function loop(now: number) {
+      stepFrame(now);
       raf = requestAnimationFrame(loop);
     }
     raf = requestAnimationFrame(loop);
+    // Keep simulation & network sync running smoothly even if a browser tab/window is unfocused.
+    const bgTicker = window.setInterval(() => {
+      const now = performance.now();
+      if (now - last >= 45) stepFrame(now);
+    }, 40);
 
     return () => {
       cancelAnimationFrame(raf);
+      clearInterval(bgTicker);
       bgm.pause();
       bgm.src = '';
       window.removeEventListener('keydown', onKeyDown);
@@ -1122,7 +1457,7 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
       ref={canvasRef}
       width={W}
       height={H}
-      className="block h-auto w-full max-w-[800px] rounded-md border border-red-950 bg-black [image-rendering:pixelated]"
+      className="block h-auto w-full max-w-[1200px] rounded-md border border-amber-950/60 bg-black shadow-[0_0_50px_rgba(0,0,0,0.95)] [image-rendering:pixelated]"
       aria-label="Going Up? game canvas"
     />
   );
