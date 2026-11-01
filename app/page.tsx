@@ -65,7 +65,7 @@ export default function Home() {
 
   const connectRoom = (code: string, nextMode: 'HOST' | 'CLIENT') => {
     if (!supabase) {
-      setLobbyError('Isi dulu NEXT_PUBLIC_SUPABASE_URL & NEXT_PUBLIC_SUPABASE_ANON_KEY di .env.local');
+      setLobbyError('Mode Online belum tersedia saat ini.');
       return;
     }
     leaveChannel();
@@ -267,7 +267,7 @@ export default function Home() {
             {/* Online Co-op Sub-panel */}
             <div className="mt-5 border-2 border-amber-900/70 bg-[#090404] p-4">
               <p className="mb-3 font-mono text-[10px] uppercase tracking-wider text-amber-400 sm:text-xs">
-                Online Co-op (Supabase Realtime)
+                Online Co-op (Main Bareng Beda Perangkat)
               </p>
               <div className="flex flex-col gap-3">
                 <button
