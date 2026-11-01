@@ -69,6 +69,7 @@ const ELEV_DANGER = { sx: 812, sy: 690, sw: 118, sh: 285 };
 
 const BGM_SRC = '/music/musik_latar_1.wav';
 const GHOST_SFX = '/music/ghost.wav';
+const ELEVATOR_HIT_SFX = '/music/elevator_hit.ogg';
 const SKELETON_SFX = Array.from({ length: 10 }, (_, i) => `/music/${i}.ogg`);
 const ZOMBIE_SFX = [1, 2, 3, 4].map((i) => `/music/zombieYell${i}.wav`);
 
@@ -335,7 +336,10 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
       });
     } else if (mode === 'CLIENT' && channel) {
       channel.on('broadcast', { event: 'state' }, ({ payload }: { payload: GameState }) => {
-        if (payload.hp < s.hp) screenShake(0.4, 12);
+        if (payload.hp < s.hp) {
+          if (s.state === 'PLAYING') playClip(ELEVATOR_HIT_SFX, 0.85);
+          screenShake(0.4, 12);
+        }
         Object.assign(s, payload);
       });
     }
@@ -468,6 +472,7 @@ export default function GameCanvas({ mode, p1Role, channel, onHud }: Props) {
         const hitY = g.y + GHOST_H / 2 > s.y && g.y - GHOST_H / 2 < s.y + LIFT_H;
         if (hitX && hitY) {
           s.hp = Math.max(0, s.hp - GHOST_DAMAGE);
+          playClip(ELEVATOR_HIT_SFX, 0.85);
           screenShake(0.35, 10);
           return false;
         }
